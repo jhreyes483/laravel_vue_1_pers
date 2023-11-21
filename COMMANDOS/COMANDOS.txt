@@ -6,3 +6,17 @@ instalacion de npm
 npm i
 npm run dev
 npm run watch
+
+"Creacion de modelo
+php artisan make:model Blog"
+
+"Creacion de migracion
+php artisan make:migration create_bogs_table
+php artisan migrate"
+
+"Crear controller con metodos
+artisan make:controller Blog/BlogController --resource"
+
+"intalacion de librerias vue"
+npm install vue
+

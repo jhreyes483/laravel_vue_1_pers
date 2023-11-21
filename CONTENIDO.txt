@@ -1,0 +1,14 @@
+Vue con laravel
+
+parte 1
+https://www.youtube.com/watch?v=rnoHztYWd6o
+
+parte 2
+https://www.youtube.com/watch?v=Zc3Jtz94DMg
+
+Link de descarga
+https://www.youtube.com/watch?v=Zc3Jtz94DMg
+
+http://127.0.0.1:8000/blogs?
+
+

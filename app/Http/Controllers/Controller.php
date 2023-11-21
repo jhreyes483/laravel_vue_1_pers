@@ -10,7 +10,7 @@ use App\Http\Traits\ResponseApi;
 
 class Controller extends BaseController
 {
-    public $responseApi;
+public $responseApi;
     public function __construct()
     {
         $this->responseApi =  new ResponseApi();
