@@ -1,0 +1,3 @@
+Crear proyecto 
+composer create-project laravel/laravel nameproyect
+----------------------
