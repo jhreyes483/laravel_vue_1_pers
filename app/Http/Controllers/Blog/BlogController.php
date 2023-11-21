@@ -17,7 +17,12 @@ class BlogController extends Controller
 
     public function index()
     {
-        
+        $blogs =Blog::all();
+        $response = [
+            'blogs' =>$blogs
+        ];
+        return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Done'],   $response );
+
     }
 
 
@@ -29,7 +34,11 @@ class BlogController extends Controller
 
     public function store(Request $request)
     {
-        //
+        $blog = Blog::create($request->post());
+        $response = [
+            'blog' =>$blog
+        ];
+        return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Done'],   $response );
     }
 
     /**
@@ -38,9 +47,12 @@ class BlogController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Blog $blog)
     {
-        //
+        $response = [
+            'blog' => $blog
+        ];
+        return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Done'],   $response );
     }
 
     /**
@@ -61,19 +73,23 @@ class BlogController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Blog $blog)
     {
-        //
+     
+        $blog->fill($request->post())->save();
+        $response = [
+            'blog' => $blog
+        ];
+        $response['msg'] = 'actualizo producto';
+        return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Done'],   $response );
+
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
+
+    public function destroy(Blog $blog)
     {
-        //
+        $blog->delete();   
+        return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Done'],   ['msg'=>'se elimino porducto'] );
+
     }
 }
