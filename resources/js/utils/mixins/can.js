@@ -8,7 +8,7 @@ let p = {
             if (permissions["permissions"]) {
                 let rolesUser = (JSON.parse(localStorage.getItem('roles'))) ? JSON.parse(localStorage.getItem('roles')) : []
                 let user = JSON.parse(localStorage.getItem("user"))
-                if (rolesUser.find(r => r == "SUPER_ADMIN") && (user && user.email == "luis.raga@laika.com.co")) {
+                if (rolesUser.find(r => r == "SUPER_ADMIN") && (user && user.email == "jav--outlook.com")) {
                     if (!verifiedSavePermissionApi(permissions.permissions[0])) {
                         // updatedPermission(permissions).then(resp => {
                         //     console.log('==================updatedPermission==================');
