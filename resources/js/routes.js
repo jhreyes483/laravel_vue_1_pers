@@ -41,11 +41,6 @@ export const routes = [
         component: Medica
     },
     {
-        name: 'medicacion',
-        path: '/medicacion',
-        component: Medica
-    },
-    {
         name: 'test',
         path: '/test',
         component: Test
