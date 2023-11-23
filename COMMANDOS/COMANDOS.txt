@@ -20,3 +20,42 @@ artisan make:controller Blog/BlogController --resource"
 "intalacion de librerias vue"
 npm install vue
 
+
+"Autenticacion por auth:api
+
+php artisan passport:install
+php artisan cache:clear
+php artisan config:clear
+php artisan passport:keys
+
+si no 
+composer require laravel/sanctum
+php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+php artisan sanctum:install
+" 
+
+y revisar config.auth.php
+    'defaults' => [
+        'guard' => 'api',
+        'passwords' => 'users',
+    ],
+
+   'guards' => [
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        'api' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+            'hash' => false,
+        ],
+    ],
+
+
+php artisan make:middleware ApiLoginMiddleware
+
+y agregar en el kernel en 
+        'auth' => \App\Http\Middleware\ApiLoginMiddleware::class,
+

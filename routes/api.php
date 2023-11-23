@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\AuthController;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -12,10 +13,24 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 //de esta forma nos genera todas las rutas
 
+Route::prefix('v1')->group(function(){
+    Route::get('auth/login',[AuthController::class, 'login']);
+    Route::post('auth/register',[AuthController::class, 'register']);
+});
+
+
+
+
 Route::post('/medic/all', [\App\Http\Controllers\MedicController::class, '__invoke']);
 Route::post('/medic/save_log', [\App\Http\Controllers\MedicController::class, 'saveLog']);
-Route::post('/general/progress_bar', [\App\Http\Controllers\MedicController::class, 'getProgressBar']);
+
 Route::post('/medic/search', [\App\Http\Controllers\MedicController::class, 'search']);
+
+
+
+Route::middleware([/*'auth:api'*/  'auth:api'])->group(function () {
+    Route::post('/general/progress_bar', [\App\Http\Controllers\MedicController::class, 'getProgressBar']);
+});
 
 
 // finansas
