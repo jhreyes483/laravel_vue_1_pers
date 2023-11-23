@@ -44,7 +44,6 @@ export default {
     },
     methods: {
         authLogin() {
-            console.log('metodo login');
             //this.preload = true
             var data = {
                 email: this.login.email,
@@ -55,13 +54,12 @@ export default {
             axios.post('api/v1/auth/login', data).then(res => {
                 //this.preload = false
 
-
-
                 if (res.data.status == 'success') {
                     let token = res.data.authorisation.token;
                     console.log(token, 'token _1')
                     //localStorage.setItem('auth_token', token);
                     this.$http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                    localStorage.setItem('access_token', token);
                     this.$router.push('/medicacion');
                 } else {
                     alert('Credeciales incorrectas');

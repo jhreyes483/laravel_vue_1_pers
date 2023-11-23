@@ -29,7 +29,11 @@ import 'vue-select/dist/vue-select.css';
 import {
     ClientTable,ServerTable, Event
 } from 'vue-tables-2';
+/* Loader */
 import Loading from 'vue-loading-overlay';
+import 'vue-loading-overlay/dist/vue-loading.css'; 
+/*******/
+
 import { Datetime } from 'vue-datetime'
 import sha1 from 'js-sha1'
 window.sha1 = sha1
@@ -129,16 +133,8 @@ Vue.use(VueCurrencyFilter, {
 Vue.use(Loading, {
    // height: '1000px',
    // width: '1000px',
-   // color: '#653F90',
-    loader: 'dots',
-
-
-   // right:0,
-    //left:0
-   // top: '10%',   
-   // left: '80%',               
-   // transform: 'translate(-50%, -50%)'
-
+    color: '#000000',
+    loader: 'spinner',
 })
 
 
