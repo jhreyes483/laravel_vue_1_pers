@@ -25,6 +25,22 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        $user = User::where('email', $request->email)->first();
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized',
+            ], /*401 */);
+        }
+        $token = $user->createToken('auth_token')->plainTextToken;
+        $data = response()->json([
+            'status' => 'success',
+            'authorisation' => [
+                'token' => $token,
+                'type' => 'bearer'
+            ]
+        ]);
+        /*
         $credentials = $request->only('email', 'password');
         if(!Auth::attempt($credentials)){
             return response()->json([
@@ -41,6 +57,7 @@ class AuthController extends Controller
                 'type' => 'bearer',
             ]
         ]);
+        */
         return $data;
 /*
         if (Auth::attempt($credentials)) {

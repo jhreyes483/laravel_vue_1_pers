@@ -6,14 +6,15 @@ const Medica = () => import('./components/Medicacion/Medicacion.vue')
 const Mostrar = () => import('./components/blog/Mostrar.vue')
 const Crear = () => import('./components/blog/Crear.vue')
 const Editar = () => import('./components/blog/Editar.vue')
+const Login = () => import('./components/auth/Login')
 
 const Test = () => import('./components/Test.vue')
 
 export const routes = [
     {
-        name: 'home',
+        name: 'login',
         path: '/',
-        component: Home
+        component: Login
     },
     {
         name: 'mostrarBlogs',

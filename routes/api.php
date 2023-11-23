@@ -14,29 +14,30 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //de esta forma nos genera todas las rutas
 
 Route::prefix('v1')->group(function(){
-    Route::get('auth/login',[AuthController::class, 'login']);
+    Route::post('auth/login',[AuthController::class, 'login']);
     Route::post('auth/register',[AuthController::class, 'register']);
 });
 
 
 
 
-Route::post('/medic/all', [\App\Http\Controllers\MedicController::class, '__invoke']);
-Route::post('/medic/save_log', [\App\Http\Controllers\MedicController::class, 'saveLog']);
 
-Route::post('/medic/search', [\App\Http\Controllers\MedicController::class, 'search']);
+
 
 
 
 Route::middleware([/*'auth:api'*/  'auth:api'])->group(function () {
     Route::post('/general/progress_bar', [\App\Http\Controllers\MedicController::class, 'getProgressBar']);
+    Route::post('/medic/save_log', [\App\Http\Controllers\MedicController::class, 'saveLog']);
+    Route::post('/medic/search', [\App\Http\Controllers\MedicController::class, 'search']);
+    Route::post('finance/getInvestments', [\App\Http\Controllers\FinanceController::class, 'getInvestments']);
 });
 
-
-// finansas
-Route::post('finance/getInvestments', [\App\Http\Controllers\FinanceController::class, 'getInvestments']);
-
 Route::post('/test', [\App\Http\Controllers\testController::class, 'methodOne']);
+// finansas
+
+
+
 
 // getProgressBar
 
