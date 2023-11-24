@@ -19,14 +19,8 @@ Route::prefix('v1')->group(function(){
 });
 
 
-
-
-
-
-
-
-
 Route::middleware([/*'auth:api'*/  'auth:api'])->group(function () {
+	Route::post('/medic/all', [\App\Http\Controllers\MedicController::class, '__invoke']);
     Route::post('/general/progress_bar', [\App\Http\Controllers\MedicController::class, 'getProgressBar']);
     Route::post('/medic/save_log', [\App\Http\Controllers\MedicController::class, 'saveLog']);
     Route::post('/medic/search', [\App\Http\Controllers\MedicController::class, 'search']);
@@ -34,12 +28,4 @@ Route::middleware([/*'auth:api'*/  'auth:api'])->group(function () {
 });
 
 Route::post('/test', [\App\Http\Controllers\testController::class, 'methodOne']);
-// finansas
-
-
-
-
-// getProgressBar
-
-
 Route::resource('blog',App\Http\Controllers\BlogController::class);

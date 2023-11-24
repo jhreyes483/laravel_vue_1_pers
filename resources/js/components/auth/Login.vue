@@ -1,6 +1,7 @@
 <template>
     <div class="container-fluid">
         <div class="col-md-6 mx-auto card card-body">
+            <div class="card-title">Sistema personal de control By: dev-jav</div>
             <form class="kt-form" @submit.prevent="authLogin()" method="post">
 
                 <div class="row justify-content-center">
@@ -21,7 +22,7 @@
 
                 <div class="kt-login__actions">
                     <button type="submit"
-                        class="btn btn-primary kt-spinner kt-spinner--right kt-spinner--md kt-spinner--light">Siguiente</button>
+                        class="btn btn-primary kt-spinner kt-spinner--right kt-spinner--md kt-spinner--light">Ingresar</button>
 
 
                 </div>
