@@ -1,3 +1,11 @@
+<script>
+let access_token = localStorage.getItem('access_token');
+if (!access_token) {
+    window.location = '/'
+}
+
+</script>
+
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>

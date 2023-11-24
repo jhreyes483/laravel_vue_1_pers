@@ -59,3 +59,6 @@ php artisan make:middleware ApiLoginMiddleware
 y agregar en el kernel en 
         'auth' => \App\Http\Middleware\ApiLoginMiddleware::class,
 
+
+        "Configuracion de guardadoi persistente de token"
+

@@ -1,4 +1,5 @@
 import {config} from '../../config'
+import { clearLocalStorage } from './localStorage'
 
 let baseUrl = config.baseURL
 
@@ -18,7 +19,7 @@ if (token) {
     console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
 }
 
-export async function get(url) {
+export async function get(url, custom_headers = {}) {
     status = true;
     let urlFinal = url
     if (urlFinal[0] == '/') {
@@ -26,6 +27,11 @@ export async function get(url) {
     }
 
     let newUrl = `${baseUrl}${urlFinal}`
+
+    headers = {
+        ...headers,
+        ...custom_headers
+    }
 
     let result = fetch(newUrl, {
             method: 'GET',
@@ -35,7 +41,7 @@ export async function get(url) {
             //validar status de la peticion
             status = response.ok
             if (response.status == 401) {
-                localStorage.clear()
+                clearLocalStorage()
                 window.location = `${baseUrl}login`
             }
 
@@ -51,7 +57,92 @@ export async function get(url) {
     return result
 }
 
-export async function post(url, params={}, notBaseUrl = false) {
+export async function post(url, params={}, notBaseUrl = false, custom_headers = {}) {
+    if (params.toLocaleString() == "[object FormData]") {
+        delete headers['Content-Type']
+        console.log(headers['Content-Type']);
+    } else {
+        headers['Content-Type'] = 'application/json'
+        params = JSON.stringify(params)
+    }
+    status = true;
+
+    headers = {
+        ...headers,
+        ...custom_headers
+    }
+
+    let urlFinal = url
+    if (urlFinal[0] == '/') {
+        urlFinal = urlFinal.substring(1)
+    }
+
+    let newUrl = notBaseUrl ? url : `${baseUrl}${urlFinal}`
+    let result = fetch(newUrl, {
+            method: 'POST',
+            body: params,
+            headers,
+        })
+        .then((response) => {
+            //validar status de la peticion
+            status = response.ok
+            if (response.status == 401) {
+                clearLocalStorage()
+                window.location = `${baseUrl}login`
+            }
+            return response.json()
+        })
+        .then(resp => {
+            if (status == 'true') {
+                return { data: resp }
+            } else {
+                throw (resp)
+            }
+        })
+    return result
+}
+
+export async function del(url, params={}, notBaseUrl = false) {
+    if (params.toLocaleString() == "[object FormData]") {
+        delete headers['Content-Type']
+        console.log(headers['Content-Type']);
+    } else {
+        headers['Content-Type'] = 'application /json'
+        params = JSON.stringify(params)
+    }
+    status = true;
+
+    let urlFinal = url
+    if (urlFinal[0] == '/') {
+        urlFinal = urlFinal.substring(1)
+    }
+
+    let newUrl = notBaseUrl ? url : `${baseUrl}${urlFinal}`
+    let result = fetch(newUrl, {
+        method: 'DELETE',
+        body: params,
+        headers,
+    })
+        .then((response) => {
+            //validar status de la peticion
+            status = response.ok
+            if (response.status == 401) {
+                localStorage.clear()
+                window.location = `${baseUrl}login`
+            }
+            return response.json()
+        })
+        .then(resp => {
+            if (status == 'true') {
+                return { data: resp }
+            } else {
+                throw (resp)
+            }
+        })
+    return result
+}
+
+export async function patch(url, params={}, notBaseUrl = false) {
     if (params.toLocaleString() == "[object FormData]") {
         delete headers['Content-Type']
         console.log(headers['Content-Type']);
@@ -68,10 +159,10 @@ export async function post(url, params={}, notBaseUrl = false) {
 
     let newUrl = notBaseUrl ? url : `${baseUrl}${urlFinal}`
     let result = fetch(newUrl, {
-            method: 'POST',
-            body: params,
-            headers,
-        })
+        method: 'PATCH',
+        body: params,
+        headers,
+    })
         .then((response) => {
             //validar status de la peticion
             status = response.ok

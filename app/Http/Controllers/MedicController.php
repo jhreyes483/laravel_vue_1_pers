@@ -6,6 +6,7 @@ use App\Http\Helpers\Handler;
 use Illuminate\Http\Request;
 use App\Http\Traits\Sp;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class MedicController extends Controller
 {
@@ -20,6 +21,7 @@ class MedicController extends Controller
 
     public function __invoke(Request $request){
         try {
+            // id autenticado Auth::id()
             $dateSearch= ( isset( $request->date) ? Carbon::parse($request->date)->toDateString() : Carbon::now('America/Bogota')->toDateTimeString() );
             $params   = ['p_user_id'=>1, 'p_data_serach' => $dateSearch];
             $all      = $this->execSP('lsp_get_earrings' ,$params);

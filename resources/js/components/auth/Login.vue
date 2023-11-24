@@ -51,37 +51,16 @@ export default {
                 password: this.login.password
             }
             console.log(data, 'data');
-            axios.post('api/v1/auth/login', data).then(res => {
+            axios.post('api/v1/auth/login', data).then(res => { 
                 //this.preload = false
 
                 if (res.data.status == 'success') {
                     let token = res.data.authorisation.token;
-                    console.log(token, 'token _1')
-                    //localStorage.setItem('auth_token', token);
-                    this.$http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                    localStorage.setItem('access_token', token);
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                     this.$router.push('/medicacion');
+                    localStorage.setItem('access_token', token);
                 } else {
                     alert('Credeciales incorrectas');
-                }
-
-
-
-
-
-
-                // this.$store.commit('setToken', token);
-
-                //console.log(res)
-                if (false) {
-                    // window.axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.data.token}`
-                    //this.show_code_verification = true;
-                } else {
-                    this.error_messages.push(res.data.message.content)
-                    // this.login={
-                    //     email:'',
-                    //     password:''
-                    //   }
                 }
             })
         }

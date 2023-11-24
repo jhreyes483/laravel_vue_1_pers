@@ -10,36 +10,52 @@ const Login = () => import('./components/auth/Login')
 
 const Test = () => import('./components/Test.vue')
 
+//auth functions
+import {
+    can,
+    existToken,
+    beforeEnter
+} from './utils/functions/auth'
+
+//--------------------------------------------
+
+// routes
 export const routes = [
     {
         name: 'login',
         path: '/',
-        component: Login
+        component: Login,
+       
     },
     {
         name: 'mostrarBlogs',
         path: '/blogs',
-        component: Mostrar
+        component: Mostrar,
+        beforeEnter: (to, from, next) => beforeEnter(to, from, next)
     },
     {
         name: 'crearBlog',
         path: '/crear',
-        component: Crear
+        component: Crear,
+        beforeEnter: (to, from, next) => beforeEnter(to, from, next)
     },
     {
         name: 'editarBlog',
         path: '/editar/:id',
-        component: Editar
+        component: Editar,
+        beforeEnter: (to, from, next) => beforeEnter(to, from, next)
     },
      {
         name: 'contacto',
         path: '/contacto',
-        component: Contacto
+        component: Contacto,
+        beforeEnter: (to, from, next) => beforeEnter(to, from, next)
     },
     {
         name: 'medicacion',
         path: '/medicacion',
-        component: Medica
+        component: Medica,
+        beforeEnter: (to, from, next) => beforeEnter(to, from, next)
     },
     {
         name: 'test',

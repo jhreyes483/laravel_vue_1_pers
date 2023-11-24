@@ -20,6 +20,11 @@ const router = new VueRouter({
     routes: routes
 });
 
+/** persistencia de token en todas las peticiones **/
+ var token = localStorage.getItem('access_token');
+ if(token){
+    axios.defaults.headers.common['Authorization'] = 'Bearer '+ token; 
+ }
 
 /********************** dependences ***************************/
 import * as VueGoogleMaps from 'vuejs-google-maps';
@@ -164,18 +169,7 @@ import VModal from 'vue-js-modal';
 Vue.use(VModal);
 Vue.use(Event)
 
-
-
-
-
-
 /******************************************/
-
-
-
-
-
-
 
 
 //finalmente, definimos nuestra app de Vue

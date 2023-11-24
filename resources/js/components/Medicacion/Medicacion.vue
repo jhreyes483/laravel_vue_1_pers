@@ -290,9 +290,14 @@ export default {
         this.getInvestments()
         this.getProgress()
         this.getComplements()
+       // this.getToken()
 
     },
     methods: {
+        getToken(){
+            console.log(localStorage.getItem('access_token'), 'getToken')
+        },
+
         getInvestments(){
             axios.post("/api/finance/getInvestments")
                 //post('/api/times_zones/getComplement',{time_zone_id:this.wr.time_zone_id})
