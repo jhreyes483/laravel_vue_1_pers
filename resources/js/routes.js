@@ -31,31 +31,31 @@ export const routes = [
         name: 'mostrarBlogs',
         path: '/blogs',
         component: Mostrar,
-        beforeEnter: (to, from, next) => beforeEnter(to, from, next)
+       // beforeEnter: (to, from, next) => beforeEnter(to, from, next)
     },
     {
         name: 'crearBlog',
         path: '/crear',
         component: Crear,
-        beforeEnter: (to, from, next) => beforeEnter(to, from, next)
+      //  beforeEnter: (to, from, next) => beforeEnter(to, from, next)
     },
     {
         name: 'editarBlog',
         path: '/editar/:id',
         component: Editar,
-        beforeEnter: (to, from, next) => beforeEnter(to, from, next)
+      //  beforeEnter: (to, from, next) => beforeEnter(to, from, next)
     },
      {
         name: 'contacto',
         path: '/contacto',
         component: Contacto,
-        beforeEnter: (to, from, next) => beforeEnter(to, from, next)
+       // beforeEnter: (to, from, next) => beforeEnter(to, from, next)
     },
     {
         name: 'medicacion',
         path: '/medicacion',
         component: Medica,
-        beforeEnter: (to, from, next) => beforeEnter(to, from, next)
+       // beforeEnter: (to, from, next) => beforeEnter(to, from, next)
     },
     {
         name: 'test',
