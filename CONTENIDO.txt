@@ -11,4 +11,10 @@ https://www.youtube.com/watch?v=Zc3Jtz94DMg
 
 http://127.0.0.1:8000/blogs?
 
+/** laravel permisos ***/
+https://spatie.be/docs/laravel-permission/v6/introduction
+
+1) composer require spatie/laravel-permission
+2) php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
+3) php artisan migrate
 
