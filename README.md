@@ -23,7 +23,7 @@
 ### 3. Iniciar proyecto en mode desarrollo
 - php artisan serve
 
-### 4. Mombre inicial DB en mongoDB
+### 4. Nombre inicial DB
 - laravel_vue_1
 - MySQL
 
