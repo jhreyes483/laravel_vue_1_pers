@@ -17,14 +17,17 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <router-link exact-active-class="active" to="/" class="nav-link active"
+                            <router-link active-class="active" to="/" class="nav-link active"
                                 aria-current="page">Inicio</router-link>
                         </li>
                         <li class="nav-item">
-                            <router-link exact-active-class="active" to="/blogs" class="nav-link">Blogs</router-link>
+                            <router-link active-class="active" to="/blogs" class="nav-link">Blogs</router-link>
                         </li>
                         <li class="nav-item">
-                            <router-link exact-active-class="active" to="/contacto" class="nav-link">Contacto</router-link>
+                            <router-link active-class="active" to="/contacto" class="nav-link">Contacto</router-link>
+                        </li>
+                        <li class="nav-item">
+                            <router-link active-class="active" to="/control_usuarios" class="nav-link">Control de usuarios</router-link>
                         </li>
                     </ul>
 

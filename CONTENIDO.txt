@@ -27,3 +27,7 @@ php artisan make:controller RoleAssignController
 COMMMITS
 "se instala dependencia y se ejecuta migracion"
 
+"confuguracion inicial de asignar rol por spatie"
+"se crea metodo para agregar y elimiar permisos a usuarios"
+
+

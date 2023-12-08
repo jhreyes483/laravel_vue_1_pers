@@ -28,11 +28,15 @@ Route::middleware([/*'auth:api'*/  'auth:api'])->group(function () {
 
     /* permisions */
     Route::post('/get_users', [\App\Http\Controllers\RoleAssignController::class, 'getUsers']);
+    Route::post('/get_permissions', [\App\Http\Controllers\RoleAssignController::class, 'getTableUserPermissions']);
     Route::get('/get_user/{id}', [\App\Http\Controllers\RoleAssignController::class, 'getUserById']);
     Route::get('/get_roles', [\App\Http\Controllers\RoleAssignController::class, 'getRoles']);
     Route::put('/update/user/roles/',[\App\Http\Controllers\RoleAssignController::class,'updateUserRoles']);
+
     
-  
+    Route::post('/permissions/delete/',[\App\Http\Controllers\RoleAssignController::class,'removePermission']);
+    Route::post('/permissions/add/',[\App\Http\Controllers\RoleAssignController::class,'addPermission']);
+
 });
 
 

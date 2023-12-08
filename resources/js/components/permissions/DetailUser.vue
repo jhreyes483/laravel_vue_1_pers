@@ -26,13 +26,24 @@
             </div>
         </div>
 
+        <TableHasPermissions 
+        url_table = "/api/get_permissions" 
+        url_add_permisions = "/api/permissions/add/"
+        url_remove_permisions = "/api/permissions/delete/"
+        entity ="user" 
+        ></TableHasPermissions>
+
 
 
     </div>
 </template>
 <script>
+
+import TableHasPermissions from "./TableHasPermissions.vue";
 export default {
-    components: {},
+    components: {   
+        TableHasPermissions
+    },
     data() {
         return {
             roles: [],
