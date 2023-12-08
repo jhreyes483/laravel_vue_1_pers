@@ -5,7 +5,10 @@
             <form class="kt-form" @submit.prevent="authLogin()" method="post">
 
                 <div class="row justify-content-center">
-                    <p class="text-danger" v-for="(item, index) in error_messages" :key="index">{{ item }}</p>
+                    <!--  
+                         <p class="text-danger" v-for="(item, index) in error_messages" :key="index">{{ item }}</p>
+                    -->
+                   
                 </div>
                 <div class="form-group">
                     <input name="email" required v-model.trim="login.email" class="form-control" type="text"
@@ -51,15 +54,17 @@ export default {
                 //  password:sha1(this.login.password)
                 password: this.login.password
             }
-            console.log(data, 'data');
             axios.post('api/v1/auth/login', data).then(res => { 
                 //this.preload = false
 
                 if (res.data.status == 'success') {
-                    let token = res.data.authorisation.token;
+                    let token    = res.data.authorisation.token;
+                    let identity = res.data.user;
                     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                
                     this.$router.push('/medicacion');
                     localStorage.setItem('access_token', token);
+                    localStorage.setItem('identity',JSON.stringify(identity));
                 } else {
                     alert('Credeciales incorrectas');
                 }

@@ -25,7 +25,18 @@ Route::middleware([/*'auth:api'*/  'auth:api'])->group(function () {
     Route::post('/medic/save_log', [\App\Http\Controllers\MedicController::class, 'saveLog']);
     Route::post('/medic/search', [\App\Http\Controllers\MedicController::class, 'search']);
     Route::post('finance/getInvestments', [\App\Http\Controllers\FinanceController::class, 'getInvestments']);
+
+    /* permisions */
+    Route::post('/get_users', [\App\Http\Controllers\RoleAssignController::class, 'getUsers']);
+    Route::get('/get_user/{id}', [\App\Http\Controllers\RoleAssignController::class, 'getUserById']);
+    Route::get('/get_roles', [\App\Http\Controllers\RoleAssignController::class, 'getRoles']);
+    Route::put('/update/user/roles/',[\App\Http\Controllers\RoleAssignController::class,'updateUserRoles']);
+    
+  
 });
 
-Route::post('/test', [\App\Http\Controllers\testController::class, 'methodOne']);
+
+
+Route::get('/permissions', [\App\Http\Controllers\RoleAssignController::class, 'getPermissions']); // get_users
+
 Route::resource('blog',App\Http\Controllers\BlogController::class);

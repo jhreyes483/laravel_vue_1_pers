@@ -8,6 +8,10 @@ const Crear = () => import('./components/blog/Crear.vue')
 const Editar = () => import('./components/blog/Editar.vue')
 const Login = () => import('./components/auth/Login')
 
+/***** permisos ****** */
+const ControlUsers = () => import('./components/permissions/View.vue')
+const DetailUser = () => import('./components/permissions/DetailUser.vue');
+
 const Test = () => import('./components/Test.vue')
 
 //auth functions
@@ -61,6 +65,16 @@ export const routes = [
         name: 'test',
         path: '/test',
         component: Test
+    },
+    {
+        name: 'control_usuarios',
+        path: '/control_usuarios',
+        component: ControlUsers
+    },
+    {
+        name: 'permisos-detail',
+        path: '/usuario/permisos-detail/:id',
+        component: DetailUser
     }
 
 ]

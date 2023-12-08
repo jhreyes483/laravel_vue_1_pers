@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Helpers;
+use Illuminate\Http\Request;
 
 
 final class Handler
@@ -272,6 +273,27 @@ final class Handler
 
         } catch (\Throwable $th) {
         }
+    }
+
+    static function getOffsetTable(Request $request)
+    {
+        return $request->limit * ($request->page - 1);
+    }
+
+    static function responseFormatTable($response, $count = 0, $emails, $from, $controller): array
+    {
+        $bool = Handler::validateResultSqlResponse($response,$emails,$from);
+
+        if($bool['error']){
+            return  $controller->responseApi(false, ['type' => 'error', 'content' => 'Done.'], $bool['msg']);
+        }else{
+            return [
+                "status" => true,
+                "count" => $count,
+                "data" => $response['data']
+            ];
+        }
+        return [];
     }
 
 }
