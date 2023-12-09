@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\RoleAssignController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
@@ -33,6 +34,9 @@ class AuthController extends Controller
             ], /*401 */);
         }
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        $roleController = new RoleAssignController;
+        $permiccions   = $roleController->getPermissionsByEntity($user);
         $data = response()->json([
             'status' => 'success',
             'authorisation' => [
@@ -41,7 +45,8 @@ class AuthController extends Controller
             ],
             'user' =>[
                 'name' =>$user->name,
-                'email' => $user->email
+                'email' => $user->email,
+                'permiccions' => $permiccions??[]
             ]
         ]);
         /*
