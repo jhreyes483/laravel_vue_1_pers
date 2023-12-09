@@ -42,16 +42,16 @@ class AuthController extends Controller
         $permiccions = $this->getPermissionsByEntity($user);
         $perms       = $permiccions;
         $roles       = $this->getRolesByEntity($user);
-        if($roles && count($roles)){
+                if($roles && count($roles)){
             foreach ($roles as  $key => $name) {
                 $permissionsRole = [];
                 $role =  ModelRole::where('name', $name)->first();
                 $permissionsRole  = $this->getPermissionsByEntity($role);
                 $perms = array_merge($perms, $permissionsRole);
             }
-            $perms = array_unique($perms);
+            $perms = array_values(array_unique($perms));
         }
-        /***************************************** */
+               /***************************************** */
     
 
         $data = response()->json([
@@ -64,7 +64,7 @@ class AuthController extends Controller
                 'name'                     =>$user->name,
                 'email'                    => $user->email,
                 'permissions_user'         =>   $permiccions??[],
-                'permissions_user_and_rol' => $permissionsRole,
+                'permissions_user_and_rol' => $perms,
                 'role'                     => $roles??[]
             ]
         ]);

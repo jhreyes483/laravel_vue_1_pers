@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 09-12-2023 a las 02:30:17
+-- Tiempo de generación: 09-12-2023 a las 04:29:22
 -- Versión del servidor: 8.0.30
 -- Versión de PHP: 7.4.33
 
@@ -1186,7 +1186,8 @@ INSERT INTO `model_has_permissions` (`permission_id`, `model_type`, `model_id`) 
 (29, 'App\\Models\\User', 1),
 (32, 'App\\Models\\User', 1),
 (33, 'App\\Models\\User', 1),
-(34, 'App\\Models\\User', 1);
+(34, 'App\\Models\\User', 1),
+(41, 'App\\Models\\User', 1);
 
 -- --------------------------------------------------------
 
@@ -1331,7 +1332,8 @@ INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at
 (37, 'table.medication12', 'api', '2023-12-09 06:30:17', '2023-12-09 06:30:17'),
 (38, 'table.medication13', 'api', '2023-12-09 06:30:17', '2023-12-09 06:30:17'),
 (39, 'table.medication14', 'api', '2023-12-09 06:30:17', '2023-12-09 06:30:17'),
-(40, 'table.medication15', 'api', '2023-12-09 06:30:17', '2023-12-09 06:30:17');
+(40, 'table.medication15', 'api', '2023-12-09 06:30:17', '2023-12-09 06:30:17'),
+(41, 'user.control', 'api', '2023-12-09 06:30:17', '2023-12-09 06:30:17');
 
 -- --------------------------------------------------------
 
@@ -1391,13 +1393,25 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (2, 'App\\Models\\User', 1, 'auth_token', 'dfb243d80c2ca5dd7ee0cb8c92464669163fdc8008bc0eb91ebf6eb7063ab3dc', '[\"*\"]', '2023-12-09 07:05:53', '2023-12-09 07:04:19', '2023-12-09 07:05:53'),
 (3, 'App\\Models\\User', 1, 'auth_token', '5c74103ba88eedf27cd0c79dc20bca1ae3c03ea3400b91b69c9a4c04cb2afebe', '[\"*\"]', '2023-12-09 07:06:42', '2023-12-09 07:05:53', '2023-12-09 07:06:42'),
 (4, 'App\\Models\\User', 1, 'auth_token', '079d47541db70bb201e9efe1f83cd193328364570e5ed293687cad108e1eaeac', '[\"*\"]', '2023-12-09 07:08:46', '2023-12-09 07:06:42', '2023-12-09 07:08:46'),
-(5, 'App\\Models\\User', 1, 'auth_token', '9a7d436181c1bb6b2773ef6f3884c4623a0d8487e40afd998223f5e02e47cf16', '[\"*\"]', '2023-12-09 07:18:19', '2023-12-09 07:08:46', '2023-12-09 07:18:19'),
+(5, 'App\\Models\\User', 1, 'auth_token', '9a7d436181c1bb6b2773ef6f3884c4623a0d8487e40afd998223f5e02e47cf16', '[\"*\"]', '2023-12-09 07:53:54', '2023-12-09 07:08:46', '2023-12-09 07:53:54'),
 (6, 'App\\Models\\User', 1, 'auth_token', 'dbbdc4910b98dcdba557f1af6224192f74b515459ab209c8e162e15d28a31bfa', '[\"*\"]', NULL, '2023-12-09 07:18:19', '2023-12-09 07:18:19'),
 (7, 'App\\Models\\User', 1, 'auth_token', '9bdf83359ae42864f0c95e6cfe23d7bc8e9d07bbdba6c7aa82ff8520410daa35', '[\"*\"]', '2023-12-09 07:23:10', '2023-12-09 07:21:02', '2023-12-09 07:23:10'),
 (8, 'App\\Models\\User', 1, 'auth_token', 'c557506c6a09bda8c63634c9e6682bf754d3b40cb989f0961e0a6ff139722770', '[\"*\"]', '2023-12-09 07:22:51', '2023-12-09 07:22:29', '2023-12-09 07:22:51'),
 (9, 'App\\Models\\User', 1, 'auth_token', '7e18b35a45dcbbeb7781a225b55eb7bd0f5b73c1ef7010adc1df229af3cecea6', '[\"*\"]', '2023-12-09 07:25:16', '2023-12-09 07:22:51', '2023-12-09 07:25:16'),
-(10, 'App\\Models\\User', 1, 'auth_token', '1b42b9bca86be25b3de44c0f58ccfe095827ffcc4ca750f31d2f710d39ab796f', '[\"*\"]', '2023-12-09 07:28:02', '2023-12-09 07:25:16', '2023-12-09 07:28:02'),
-(11, 'App\\Models\\User', 1, 'auth_token', '3f812d3e0e2884a286a2dba3316923b91d55c8877384e66d27a1db90d51e48ad', '[\"*\"]', '2023-12-09 07:28:42', '2023-12-09 07:28:02', '2023-12-09 07:28:42');
+(10, 'App\\Models\\User', 1, 'auth_token', '1b42b9bca86be25b3de44c0f58ccfe095827ffcc4ca750f31d2f710d39ab796f', '[\"*\"]', '2023-12-09 08:06:43', '2023-12-09 07:25:16', '2023-12-09 08:06:43'),
+(11, 'App\\Models\\User', 1, 'auth_token', '3f812d3e0e2884a286a2dba3316923b91d55c8877384e66d27a1db90d51e48ad', '[\"*\"]', '2023-12-09 07:38:32', '2023-12-09 07:28:02', '2023-12-09 07:38:32'),
+(12, 'App\\Models\\User', 1, 'auth_token', 'ab879a558c140076cb262f6665a75ad852b8c6a6b1d4f593784c51c85658d0ef', '[\"*\"]', '2023-12-09 08:17:44', '2023-12-09 07:53:54', '2023-12-09 08:17:44'),
+(13, 'App\\Models\\User', 1, 'auth_token', 'e2f69617f82031a0c23a2d140bb06c30c1de61e1c9f8b04a5c92e34ab0a1c421', '[\"*\"]', '2023-12-09 08:24:03', '2023-12-09 08:17:44', '2023-12-09 08:24:03'),
+(14, 'App\\Models\\User', 1, 'auth_token', 'c8bbfae902be098a3934b2ccdb80c634e084291e27000a7b1a6b4ea5a242d969', '[\"*\"]', '2023-12-09 08:49:48', '2023-12-09 08:24:03', '2023-12-09 08:49:48'),
+(15, 'App\\Models\\User', 1, 'auth_token', 'b8b5e181319761f563c6a4b6954862e4f293779f39c953b49fce7ed208d434cd', '[\"*\"]', '2023-12-09 09:13:51', '2023-12-09 08:49:48', '2023-12-09 09:13:51'),
+(16, 'App\\Models\\User', 1, 'auth_token', '593b0b00217260413b9266e833bc33d5cc50e18798f52cccd76eb39932581ff7', '[\"*\"]', '2023-12-09 09:15:27', '2023-12-09 09:13:51', '2023-12-09 09:15:27'),
+(17, 'App\\Models\\User', 1, 'auth_token', 'b14ae9f3619832a56783e9679c081c47509d12a65b0578f78d5cfd47f0ffcf25', '[\"*\"]', '2023-12-09 09:20:20', '2023-12-09 09:15:27', '2023-12-09 09:20:20'),
+(18, 'App\\Models\\User', 1, 'auth_token', '9aef7c35e16bed7865e321c057c07377b2b3dfa031dbb6a16b3f5d13834e91d7', '[\"*\"]', NULL, '2023-12-09 09:17:32', '2023-12-09 09:17:32'),
+(19, 'App\\Models\\User', 1, 'auth_token', '6ded20610ee0adf74793c85fc127b067c56e54f155cf3f0165b90fb7efe89fc3', '[\"*\"]', NULL, '2023-12-09 09:19:25', '2023-12-09 09:19:25'),
+(20, 'App\\Models\\User', 1, 'auth_token', '2fc94e8a2d29a0c658dac5766931bf6c7f392751f2f2566cf06df837b812acb9', '[\"*\"]', '2023-12-09 09:22:11', '2023-12-09 09:20:20', '2023-12-09 09:22:11'),
+(21, 'App\\Models\\User', 1, 'auth_token', '78296c6df2a5b7f43275f6a32ddf9aa74910eeba5bbe48c51fb3e86b13b29181', '[\"*\"]', '2023-12-09 09:24:26', '2023-12-09 09:22:11', '2023-12-09 09:24:26'),
+(22, 'App\\Models\\User', 1, 'auth_token', 'c61184ec7e7a68b63e084e262e603afd2e9d4fbb1856b49b4fe99dae02a69850', '[\"*\"]', '2023-12-09 09:26:05', '2023-12-09 09:24:26', '2023-12-09 09:26:05'),
+(23, 'App\\Models\\User', 1, 'auth_token', 'dfdf0f43e5642b510c9110e58cef81d312feb4b7b6f83307246d48aff3c6e240', '[\"*\"]', '2023-12-09 09:26:19', '2023-12-09 09:26:05', '2023-12-09 09:26:19');
 
 -- --------------------------------------------------------
 
@@ -1748,13 +1762,13 @@ ALTER TABLE `oauth_personal_access_clients`
 -- AUTO_INCREMENT de la tabla `permissions`
 --
 ALTER TABLE `permissions`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
 -- AUTO_INCREMENT de la tabla `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`

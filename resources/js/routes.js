@@ -71,7 +71,8 @@ export const routes = [
     {
         name: 'control_usuarios',
         path: '/control_usuarios',
-        component: ControlUsers
+        component: ControlUsers, // user.control
+        beforeEnter: (to, from, next) => beforeEnter(to, from, next, 'user.control')
     },
     {
         name: 'permisos-detail',
