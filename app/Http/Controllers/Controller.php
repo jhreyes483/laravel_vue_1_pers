@@ -44,6 +44,19 @@ public $responseApi;
             'message' => $message
         ];
     }
+
+    public function getPermissionsByEntity($entity){
+        $permissionNames = $entity->getPermissionNames();
+        $permissionNames = array_values((array)  $permissionNames)[0];
+        return  $permissionNames;
+    }
+
+    public function getRolesByEntity($entity){
+        $permissionNames = $entity->getRoleNames();
+        $permissionNames = array_values((array)  $permissionNames)[0];
+        return  $permissionNames;
+    }
+
 }
 
 

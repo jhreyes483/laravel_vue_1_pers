@@ -52,7 +52,7 @@ class RoleAssignController extends Controller
 
         if($user && is_object($user)){
 
-           // DB::enableQueryLog();
+          //  DB::enableQueryLog();
             $permissionNames = $user->getPermissionNames();
            // dd(DB::getQueryLog());
 
@@ -64,7 +64,7 @@ class RoleAssignController extends Controller
             $response = [
                 'user'          =>$user,
                 'roles'         =>$roles,
-                'usuarioRoles'  =>$usRole,
+                'usuarioRoles'  =>$usRole??[],
                 'userPermissions' => $permissionNames
 
             ];
@@ -118,19 +118,24 @@ class RoleAssignController extends Controller
 
 
     public function removePermission(Request $request){
+      //  DB::enableQueryLog();
         if( $request->entity == 'user'){
             $entity         = User::find($request->entity_identity); // id user
         }
         if( $request->entity == 'rol'){
-            $entity         = Role::findByName($request->entity_identity); // nombre roll
+            $entity         = Role::find($request->entity_identity); // nombre roll
         }
 
         $permission = $entity->permissions()->where('name', $request->name)->first();
         if($permission){
+          //  DB::enableQueryLog();
             $entity->revokePermissionTo($permission);
             $entity->save();
+           // dd(DB::getQueryLog());
         }
+     
         $permissionNames = $this->getPermissionsByEntity($entity);
+        //dd(DB::getQueryLog());
         return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Actulizo permisos de '.$request->entity], ['permissions'=>$permissionNames]);
     }
 
@@ -144,8 +149,8 @@ class RoleAssignController extends Controller
             //$permission = $entity->permissions()->where('name', $request->name)->first(); // nombre roll
         }
 
-       // $permission = Permission::findOrCreate($request->name, $request->guard_name);
-
+    
+     //  DB::enableQueryLog();
         $permission = ModelPermission::where('name', $request->name)->first();
 
         if (!$permission) {
@@ -156,16 +161,12 @@ class RoleAssignController extends Controller
             $entity->givePermissionTo($permission);
             $entity->save();
         }
+        //dd(DB::getQueryLog());
         $permissionNames = $this->getPermissionsByEntity($entity);
         return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Actulizo permisos de '.$request->entity], ['permissions'=>$permissionNames]);
     }
 
-    private function getPermissionsByEntity($entity){
-        $permissionNames = $entity->getPermissionNames();
-        $permissionNames = array_values((array)  $permissionNames)[0];
-        return  $permissionNames;
-    }
-
+ 
     public function updateUserRoles(Request $request ){
         $user      = User::find($request->user_id);
         $t         = $user->roles()->sync($request->rolesSelected);

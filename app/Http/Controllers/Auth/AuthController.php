@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Contracts\Role;
+use Spatie\Permission\Models\Role as ModelRole;
 
 class AuthController extends Controller
 {
@@ -35,18 +37,35 @@ class AuthController extends Controller
         }
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        $roleController = new RoleAssignController;
-        $permiccions   = $roleController->getPermissionsByEntity($user);
+        /********** Suma los permisos del usario con los del rol **************** */
+        $perms = [];
+        $permiccions = $this->getPermissionsByEntity($user);
+        $perms       = $permiccions;
+        $roles       = $this->getRolesByEntity($user);
+        if($roles && count($roles)){
+            foreach ($roles as  $key => $name) {
+                $permissionsRole = [];
+                $role =  ModelRole::where('name', $name)->first();
+                $permissionsRole  = $this->getPermissionsByEntity($role);
+                $perms = array_merge($perms, $permissionsRole);
+            }
+            $perms = array_unique($perms);
+        }
+        /***************************************** */
+    
+
         $data = response()->json([
             'status' => 'success',
             'authorisation' => [
-                'token' => $token,
-                'type' => 'bearer'
+                'token'     => $token,
+                'type'      => 'bearer'
             ],
             'user' =>[
-                'name' =>$user->name,
-                'email' => $user->email,
-                'permiccions' => $permiccions??[]
+                'name'                     =>$user->name,
+                'email'                    => $user->email,
+                'permissions_user'         =>   $permiccions??[],
+                'permissions_user_and_rol' => $permissionsRole,
+                'role'                     => $roles??[]
             ]
         ]);
         /*
