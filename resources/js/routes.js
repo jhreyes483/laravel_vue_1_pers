@@ -14,6 +14,7 @@ const DetailUser = () => import('./components/permissions/DetailUser.vue');
 const DetailRole = () => import('./components/permissions/DetailRole.vue');
 
 const Test = () => import('./components/Test.vue')
+const AppNotAuthorized = () => import('./components/auth/AppNotAuthorized.vue')
 
 //auth functions
 import {
@@ -36,7 +37,7 @@ export const routes = [
         name: 'mostrarBlogs',
         path: '/blogs',
         component: Mostrar,
-       // beforeEnter: (to, from, next) => beforeEnter(to, from, next)
+        beforeEnter: (to, from, next) => beforeEnter(to, from, next, 'view_bulk_load_lc')
     },
     {
         name: 'crearBlog',
@@ -81,7 +82,13 @@ export const routes = [
         name: 'role-detail',
         path: '/usuario/role-detail/:id',
         component: DetailRole
+    },
+    {
+        name: 'no_autorizado',
+        path: '/no_autorizado',
+        component: AppNotAuthorized
     }
 
 
+    
 ]

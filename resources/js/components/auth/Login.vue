@@ -60,11 +60,13 @@ export default {
                 if (res.data.status == 'success') {
                     let token       = res.data.authorisation.token;
                     let identity    = res.data.user;
-                    let permissions = res.data.user.permissions_user_and_rol;           
+                    let permissions = res.data.user.permissions_user_and_rol; 
+                    let roles       = res.data.user.role;          
                     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                     localStorage.setItem('access_token', token);
                     localStorage.setItem('identity',JSON.stringify(identity));
                     localStorage.setItem('permissions', JSON.stringify(permissions));
+                    localStorage.setItem('roles', JSON.stringify(roles));
                     this.$router.push('/medicacion');
                 } else {
                     alert('Credeciales incorrectas');
