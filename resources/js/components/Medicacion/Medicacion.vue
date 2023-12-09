@@ -67,6 +67,10 @@ body {
 
 
         <div class="container">
+
+            <button v-permissions="{ permiso: 'table.medication7ddd' }">Hacer algo</button>
+            <button v-permissions="{ permiso: 'table.medication7' }">Hacer algo</button>
+                        
             <div class="col-8 mx-auto row">
                 <div class="col-5 row mx-auto my-4 mx-auto card card shadow">
                     <div class="my-4">
@@ -85,7 +89,7 @@ body {
                     </div>
                 </div>
 
-                <div class="col-5 row mx-auto my-4  mx-auto card card shadow">
+                <div  class="col-5 row mx-auto my-4  mx-auto card card shadow">
                     <div class="my-4">
                         <label for="">Buscar agenda por fecha</label>
                            <!--

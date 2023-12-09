@@ -11,6 +11,7 @@ import axios from 'axios';
 //Importamos y configuramos el Vue-router
 import VueRouter from 'vue-router';
 import {routes} from './routes';
+import { verificarPermiso } from './utils/utils';
 
 Vue.use(VueRouter);
 Vue.use(VueAxios, axios);
@@ -19,6 +20,20 @@ const router = new VueRouter({
     mode: 'history',
     routes: routes
 });
+
+/*  directiva de permisos */
+Vue.directive('permissions', {
+    bind(el, binding, vnode) {
+      const permisoBuscado = binding.value.permiso;
+      // Verificar el permiso usando la función de verificación
+      const tienePermiso = verificarPermiso(permisoBuscado);
+      // Modificar el elemento según el resultado
+      if (!tienePermiso) {
+        el.style.display = 'none';  // Ocultar el elemento si no tiene el permiso
+      }
+    },
+  });
+/********************** */
 
 /** persistencia de token en todas las peticiones **/
  var token = localStorage.getItem('access_token');

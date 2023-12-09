@@ -58,13 +58,14 @@ export default {
                 //this.preload = false
 
                 if (res.data.status == 'success') {
-                    let token    = res.data.authorisation.token;
-                    let identity = res.data.user;
+                    let token       = res.data.authorisation.token;
+                    let identity    = res.data.user;
+                    let permissions = res.data.user.permissions_user_and_rol;           
                     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                
-                    this.$router.push('/medicacion');
                     localStorage.setItem('access_token', token);
                     localStorage.setItem('identity',JSON.stringify(identity));
+                    localStorage.setItem('permissions', JSON.stringify(permissions));
+                    this.$router.push('/medicacion');
                 } else {
                     alert('Credeciales incorrectas');
                 }
