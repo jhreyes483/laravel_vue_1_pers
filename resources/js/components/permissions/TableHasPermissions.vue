@@ -106,6 +106,7 @@ export default {
                 name             : row.name
             }
             axios.post(this.url_add_permisions , data)
+
                 .then(res => {
                 if (res.data.transaction) {
                     console.log(res, 'remove')

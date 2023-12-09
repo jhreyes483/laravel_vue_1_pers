@@ -11,7 +11,14 @@
                 <hr>
                 <b>Roles</b>
 
-                <div v-for="(rol, index) in roles" :key="index">
+                <div class="m-2">
+                    <div v-for="(rol, index) in roles" :key="index">
+                    <span class="p-2">
+                        <router-link :to="`/usuario/role-detail/${rol.id}`">
+                            <i class="far fa-edit "></i>
+                    </router-link>
+                    </span>
+
                     <input 
                     type="checkbox" 
                     :id="`rol-${rol.id}`" 
@@ -20,6 +27,8 @@
                     <label :for="`rol-${rol.id}`">
                         {{ rol.name }}
                     </label>
+                   
+                </div>
                 </div>
 
                 <button @click="guardarRoles" class="btn btn-primary btn-sm">Guardar</button>

@@ -94,6 +94,28 @@ class RoleAssignController extends Controller
         return HandlerPermisions::responseFormatTable($resp, $count , [] , $sp.json_encode($params), $this );
     }
 
+    public function getTableRolePermissions(Request $request) {
+        $role            = Role::find($request->entity_id);
+
+        $permissionNames = $this->getPermissionsByEntity($role);
+       $sp     = 'lsp_get_permissions';
+       $params = [
+           'p_offset' => HandlerPermisions::getOffsetTable($request),
+           'p_limit'  => $request->limit??2,
+       ];     
+       $resp  = $this->execSP($sp, $params);
+       $count = ($resp['data'][0]->count??0);
+      
+       if($resp && $resp['data'] && count($resp['data'])){
+            foreach($resp['data'] as $i => $permission){
+                $resp['data'][$i]->entity_has_permission= (in_array($permission->name, $permissionNames  ));
+                $resp['data'][$i]->rol_name       = $role->name;
+                $resp['data'][$i]->rol_created_at = $role->created_at;
+            }
+       }
+        return HandlerPermisions::responseFormatTable($resp, $count , [] , $sp.json_encode($params), $this );
+    }
+
 
     public function removePermission(Request $request){
         if( $request->entity == 'user'){
@@ -118,7 +140,8 @@ class RoleAssignController extends Controller
             $entity         = User::find($request->entity_identity); // id user
         }
         if( $request->entity == 'rol'){
-            $permission = $entity->permissions()->where('name', $request->name)->first(); // nombre roll
+            $entity         = Role::find($request->entity_identity); 
+            //$permission = $entity->permissions()->where('name', $request->name)->first(); // nombre roll
         }
 
        // $permission = Permission::findOrCreate($request->name, $request->guard_name);
@@ -144,23 +167,19 @@ class RoleAssignController extends Controller
     }
 
     public function updateUserRoles(Request $request ){
-
-
-        $user = User::find($request->user_id);
-
-        $t = $user->roles()->sync($request->rolesSelected);
-
-        $userRoles = $user->roles()->pluck('id')->toArray();
-
-
-
-        $roles = $user->roles()->select('id', 'name')->get();
+        $user      = User::find($request->user_id);
+        $t         = $user->roles()->sync($request->rolesSelected);
+        $roles     = $user->roles()->select('id', 'name')->get();
        foreach ($roles as $role) {
             $response['roles_user'] = ['id' => $role->id, 'name' => $role->name];
        }
        $response['roles_selected'] = $request->rolesSelected;
 
         return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Actulizo roles de usuario'], ['roles_user' => $response]);
-       
+    }
+
+    public function getRole(Request $request){
+        $role = Role::find($request->id);
+        return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Rol'], ['role' => $role]);
     }
 }

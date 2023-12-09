@@ -11,6 +11,7 @@ const Login = () => import('./components/auth/Login')
 /***** permisos ****** */
 const ControlUsers = () => import('./components/permissions/View.vue')
 const DetailUser = () => import('./components/permissions/DetailUser.vue');
+const DetailRole = () => import('./components/permissions/DetailRole.vue');
 
 const Test = () => import('./components/Test.vue')
 
@@ -75,6 +76,12 @@ export const routes = [
         name: 'permisos-detail',
         path: '/usuario/permisos-detail/:id',
         component: DetailUser
+    },
+    {
+        name: 'role-detail',
+        path: '/usuario/role-detail/:id',
+        component: DetailRole
     }
+
 
 ]

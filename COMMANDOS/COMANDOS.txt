@@ -62,3 +62,5 @@ y agregar en el kernel en
 
         "Configuracion de guardadoi persistente de token"
 
+        "se crea gestion de roles"
+

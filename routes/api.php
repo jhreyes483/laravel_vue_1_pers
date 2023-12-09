@@ -36,7 +36,9 @@ Route::middleware([/*'auth:api'*/  'auth:api'])->group(function () {
     
     Route::post('/permissions/delete/',[\App\Http\Controllers\RoleAssignController::class,'removePermission']);
     Route::post('/permissions/add/',[\App\Http\Controllers\RoleAssignController::class,'addPermission']);
+    Route::post('/permissions/getTableRolePermissions',[\App\Http\Controllers\RoleAssignController::class,'getTableRolePermissions']);
 
+    Route::get('/get_role/{id}', [\App\Http\Controllers\RoleAssignController::class, 'getRole']);
 });
 
 
