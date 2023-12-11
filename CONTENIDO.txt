@@ -32,5 +32,6 @@ COMMMITS
 "SE CREA DIRECTIVA DE PERMISOS EN VUE JS"
 "se implementa proteccion de rutas segun datos de localstorage de login"
 "se genera ejemplo de uso de permiso preteccion de rutas con permiso nuevo y asignado tabla permission"
+"EJEMPLO DE SELECT MULTIPLE CON VALORES POR DEFAULT"
 
 

@@ -11,6 +11,26 @@
                 <hr>
                 <b>Roles</b>
 
+                <!-- ejemplo de select multiple  -->
+                <v-select
+                label="text"
+                multiple
+                :options="items"
+                v-model="selected"
+                :items="items">
+                <template
+                v-slot:item="{ item, on, attrs }">
+                <h4
+                v-bind="attrs" style="width: 100%;">
+                <v-switch
+                :value="selected.includes(item.value)"
+                style="display: inline-block"/>
+                {{ item.text }}
+                </h4>
+             </template>
+            </v-select>
+
+
                 <div class="m-2">
                     <div v-for="(rol, index) in roles" :key="index">
                     <span class="p-2">
@@ -57,7 +77,10 @@ export default {
         return {
             roles: [],
             usuarioRoles: {}, // Roles del usuario, inicialmente "Admin" seleccionado
-            user : {}
+            user : {},
+
+            selected: [{text: 'A', value: 'a'}],
+            items: [{ text: 'A', value: 'a'}, { text: 'B', value: 'b'}]
         };
     },
 
@@ -74,18 +97,24 @@ export default {
 
     methods: {
         guardarRoles() {
-            // Envía la solicitud con los roles seleccionados
-            console.log(this.usuarioRoles, 'this.usuarioRole')
+
+            
+            /****** formateo de checkbox** */
             let rolesSeleccionados = Object.keys(this.usuarioRoles).filter(
                 (rolId) => this.usuarioRoles[rolId]
             );
-            console.log(rolesSeleccionados, 'rolesSeleccionados')
-            console.log("Roles Seleccionados:", rolesSeleccionados);
+            /***************************** */
+            /*** formateo de select multiple para enviar solo valores */
+            let selectedOnlyValues =  this.items.map(item => item.value);
+            /******************************** */
+
 
             let loader = this.$loading.show()
             let data = {
-                rolesSelected : rolesSeleccionados,
-                user_id : this.$route.params.id
+                rolesSelected      : rolesSeleccionados,
+                user_id            : this.$route.params.id,
+                selected_test      : this.selected,
+                selectedOnlyValues : selectedOnlyValues 
             };
 
             axios.put( '/api/update/user/roles/', data).then(res => {
