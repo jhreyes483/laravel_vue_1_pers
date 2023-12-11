@@ -79,8 +79,8 @@ export default {
             usuarioRoles: {}, // Roles del usuario, inicialmente "Admin" seleccionado
             user : {},
 
-            selected: [{text: 'A', value: 'a'}],
-            items: [{ text: 'A', value: 'a'}, { text: 'B', value: 'b'}]
+            selected: [{text: 'Option 1', value: 'a'}],
+            items: [{ text: 'Option 1', value: 'a'}, { text: 'Option 2', value: 'b'}]
         };
     },
 
