@@ -1,7 +1,7 @@
 <script>
 let access_token = localStorage.getItem('access_token');
-if (!access_token) {
-    window.location = '/'
+if (!access_token && window.location.pathname !== '/') {
+   window.location = '/'
 }
 
 </script>
