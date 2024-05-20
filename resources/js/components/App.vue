@@ -10,47 +10,49 @@
 
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                    aria-label="Toggle navigation">
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
+                        <li class="nav-item" v-if="checkToken">
                             <router-link active-class="active" to="/" class="nav-link active"
                                 aria-current="page">Inicio</router-link>
                         </li>
-                        <li class="nav-item">
+                        <!-- 
+                        <li class="nav-item" v-if="checkToken">
                             <router-link active-class="active" to="/blogs" class="nav-link">Blogs</router-link>
                         </li>
-                        <li class="nav-item">
+                        <li class="nav-item" v-if="checkToken">
                             <router-link active-class="active" to="/contacto" class="nav-link">Contacto</router-link>
                         </li>
-                        <li class="nav-item">
-                            <router-link active-class="active" to="/control_usuarios" class="nav-link">Control de usuarios</router-link>
+                         -->
+                        <li class="nav-item" v-if="checkToken">
+                            <router-link active-class="active" to="/control_usuarios" class="nav-link">Control de
+                                usuarios</router-link>
                         </li>
-                            <li class="nav-item">
-                            <router-link active-class="active" to="/login" class="nav-link">Login</router-link>
-                        </li>
-
-
-                          <li class="nav-item">
+                        <li class="nav-item" v-if="checkToken">
                             <router-link active-class="active" to="/medicacion" class="nav-link">Home</router-link>
                         </li>
                     </ul>
 
-                    <ul v-if="identity" class="navbar-nav mb-2 mb-lg-0 float-end">
+                    <ul v-if="identity && checkToken" class="navbar-nav mb-2 mb-lg-0 float-end">
                         <li class="nav-item">
-                            <router-link exact-active-class="active" to="/" class="nav-link active" aria-current="page">{{
-                                identity.name }}</router-link>
+                            <router-link exact-active-class="active" to="/" class="nav-link active"
+                                aria-current="page">{{
+                                    identity.name }}</router-link>
                         </li>
                     </ul>
-                    <ul v-if="identity" class="navbar-nav mb-2 mb-lg-0 float-end">
+                    <ul v-if="checkToken" class="navbar-nav mb-2 mb-lg-0 float-end">
                         <li class="nav-item">
-                            <div @click="logout()" class="nav-link">Cerrar sesion</div>
+                            <div @click="logout()" style="  cursor: pointer;" class="nav-link">Cerrar sesión</div>
+                        </li>
+                        <li v-if="!checkToken" class="nav-item">
+                            <router-link active-class="active" to="/login" class="nav-link">Login</router-link>
                         </li>
                     </ul>
-    
+
 
 
                 </div>
@@ -63,25 +65,33 @@
 </template>
 
 <script>
-import { user_auth  } from '../utils/services/auth.js'
+import { user_auth } from '../utils/services/auth.js'
+import { existToken } from '../utils/functions/auth.js'
 export default {
     data() {
         return {
-            identity : null
+            identity: null,
+            checkToken: existToken()
         }
     },
+    watch: {
+        '$route': function () {
+            this.checkToken = existToken();
+        },
+    },
 
-    methods:{
+    methods: {
         logout() {
             localStorage.removeItem('access_token');
             alert('cerror sesión');
+            return this.$route.path === '/';
         },
     },
     components: {},
     mounted() {
         this.identity = user_auth.getIdentity()
     },
-   
+
 
 
 }

@@ -2,8 +2,6 @@ const Home = () => import('./components/Home.vue')
 const Contacto = () => import('./components/Contacto.vue')
 
 const Medica = () => import('./components/Medicacion/Medicacion.vue')
-const Login = () => import('./components/auth/Login.vue')
-
 
 //importamos los componentes para el blog
 const Mostrar = () => import('./components/blog/Mostrar.vue')
@@ -48,7 +46,8 @@ export const routes = [
         name: 'mostrarBlogs',
         path: '/blogs',
         component: Mostrar,
-        beforeEnter: (to, from, next) => beforeEnter(to, from, next, 'view_bulk_load_lc')
+        beforeEnter: (to, from, next) => beforeEnter(to, from, next, 'view_bulk_load_lc'),
+        meta: { requiresAuth: true }
     },
     {
         name: 'crearBlog',
@@ -60,18 +59,21 @@ export const routes = [
         name: 'editarBlog',
         path: '/editar/:id',
         component: Editar,
+        meta: { requiresAuth: true }
       //  beforeEnter: (to, from, next) => beforeEnter(to, from, next)
     },
      {
         name: 'contacto',
         path: '/contacto',
         component: Contacto,
+        meta: { requiresAuth: true }
        // beforeEnter: (to, from, next) => beforeEnter(to, from, next)
     },
     {
         name: 'medicacion',
         path: '/medicacion',
         component: Medica,
+        meta: { requiresAuth: true }
        // beforeEnter: (to, from, next) => beforeEnter(to, from, next)
     },
     {
@@ -83,22 +85,26 @@ export const routes = [
         name: 'control_usuarios',
         path: '/control_usuarios',
         component: ControlUsers, // user.control
-        beforeEnter: (to, from, next) => beforeEnter(to, from, next, 'user.control')
+        beforeEnter: (to, from, next) => beforeEnter(to, from, next, 'user.control'),
+        meta: { requiresAuth: true }
     },
     {
         name: 'permisos-detail',
         path: '/usuario/permisos-detail/:id',
-        component: DetailUser
+        component: DetailUser,
+        meta: { requiresAuth: true }
     },
     {
         name: 'role-detail',
         path: '/usuario/role-detail/:id',
-        component: DetailRole
+        component: DetailRole,
+        meta: { requiresAuth: true }
     },
     {
         name: 'no_autorizado',
         path: '/no_autorizado',
-        component: AppNotAuthorized
+        component: AppNotAuthorized,
+        meta: { requiresAuth: true }
     }
 
 

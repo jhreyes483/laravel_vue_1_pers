@@ -12,6 +12,8 @@ import axios from 'axios';
 import VueRouter from 'vue-router';
 import {routes} from './routes';
 import { verificarPermiso } from './utils/utils';
+import  {existToken } from './utils/functions/auth';
+
 
 Vue.use(VueRouter);
 Vue.use(VueAxios, axios);
@@ -185,7 +187,17 @@ Vue.use(VModal);
 Vue.use(Event)
 
 /******************************************/
-
+router.beforeEach((to, from, next) => {
+    if (to.matched.some(record => record.meta.requiresAuth)) {
+        if ( existToken() ) {
+            next(); 
+        } else {
+            next('/'); 
+        }
+    } else {
+        next(); 
+    }
+});
 
 //finalmente, definimos nuestra app de Vue
 const app = new Vue({
