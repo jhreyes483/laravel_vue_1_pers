@@ -46,6 +46,10 @@ export default {
             }
         }
     },
+
+    mounted() {
+        console.log('llego');
+    },
     methods: {
         authLogin() {
             //this.preload = true

@@ -135,16 +135,23 @@ class MedicController extends Controller
                 }
 
                 $currentDateTime = Carbon::now('America/Bogota');
+          
+/*
                 $vence = '2023-04-16';
                 $cdt = [
                     'vence'=>$vence,
                     'today' => ($vence == $currentDateTime->toDateString() ),
                     'now'=>$currentDateTime->toDateString()
                 ];
-
+*/
             }
         }
-        return ['medicines'=>$medicinesAllowed,'logs'=>$allData,'cdt'=>$cdt];
+  
+        return [
+            'medicines'=>$medicinesAllowed,
+            'logs'=>$allData,
+            'cdt'=>$cdt??[]
+        ];
     }
 
 

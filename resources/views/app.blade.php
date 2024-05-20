@@ -1,8 +1,16 @@
 <script>
-let access_token = localStorage.getItem('access_token');
-if (!access_token) {
-    window.location = '/'
-}
+
+let currentPath = window.location.pathname;
+
+console.log('currentPath', currentPath)
+    console.log(currentPath);
+    if (currentPath !== '/login') {
+        let access_token = localStorage.getItem('access_token');
+
+        if (!access_token) {
+            window.location = '/login';
+        }
+    }
 
 </script>
 
@@ -32,3 +40,4 @@ if (!access_token) {
         <script src="{{ mix('js/app.js') }}" type="text/javascript"></script>
     </body>
 </html>
+

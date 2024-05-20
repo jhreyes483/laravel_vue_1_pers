@@ -7,7 +7,7 @@ export const user_auth = {
             if (json && json != "undefined" && json != null && json != undefined) {
                 identity = JSON.parse(json)
             } else {
-                identity  = this.getClearIdentity();
+                identity  ={};
               console.log('storage not 2')
             }
           }

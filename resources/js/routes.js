@@ -2,11 +2,16 @@ const Home = () => import('./components/Home.vue')
 const Contacto = () => import('./components/Contacto.vue')
 
 const Medica = () => import('./components/Medicacion/Medicacion.vue')
+const Login = () => import('./components/auth/Login.vue')
+
+
 //importamos los componentes para el blog
 const Mostrar = () => import('./components/blog/Mostrar.vue')
 const Crear = () => import('./components/blog/Crear.vue')
 const Editar = () => import('./components/blog/Editar.vue')
-const Login = () => import('./components/auth/Login')
+const LoginAuth = () => import('./components/auth/Auth.vue')
+//const Login = () => import('./components/auth/Login')
+
 
 /***** permisos ****** */
 const ControlUsers = () => import('./components/permissions/View.vue')
@@ -30,8 +35,14 @@ export const routes = [
     {
         name: 'login',
         path: '/',
-        component: Login,
+        component: LoginAuth,
        
+    },
+    {
+        name:'login2',
+        path: '/login',
+        component: LoginAuth,
+
     },
     {
         name: 'mostrarBlogs',

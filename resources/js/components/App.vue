@@ -29,6 +29,14 @@
                         <li class="nav-item">
                             <router-link active-class="active" to="/control_usuarios" class="nav-link">Control de usuarios</router-link>
                         </li>
+                            <li class="nav-item">
+                            <router-link active-class="active" to="/login" class="nav-link">Login</router-link>
+                        </li>
+
+
+                          <li class="nav-item">
+                            <router-link active-class="active" to="/medicacion" class="nav-link">Home</router-link>
+                        </li>
                     </ul>
 
                     <ul v-if="identity" class="navbar-nav mb-2 mb-lg-0 float-end">
@@ -37,6 +45,12 @@
                                 identity.name }}</router-link>
                         </li>
                     </ul>
+                    <ul v-if="identity" class="navbar-nav mb-2 mb-lg-0 float-end">
+                        <li class="nav-item">
+                            <div @click="logout()" class="nav-link">Cerrar sesion</div>
+                        </li>
+                    </ul>
+    
 
 
                 </div>
@@ -55,6 +69,13 @@ export default {
         return {
             identity : null
         }
+    },
+
+    methods:{
+        logout() {
+            localStorage.removeItem('access_token');
+            alert('cerror sesión');
+        },
     },
     components: {},
     mounted() {
