@@ -71,7 +71,12 @@ export default {
                     localStorage.setItem('roles', JSON.stringify(roles));
                     this.$router.push('/medicacion');
                 } else {
-                    alert('Credeciales incorrectas');
+                    this.$swal({
+                        icon: 'error',
+                        title: 'Credeciales incorrectas',
+                        text: 'Intente de nuevo.',
+                        confirmButtonText: 'OK'
+                    })
                 }
             })
         },
@@ -79,4 +84,3 @@ export default {
     }
 }
 </script>
-

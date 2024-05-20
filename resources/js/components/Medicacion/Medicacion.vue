@@ -4,31 +4,55 @@ body {
 }
 
 .alert-100 {
-  animation-name: parpadeo;
-  animation-duration: 1s;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
+    animation-name: parpadeo;
+    animation-duration: 1s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
 
-  }
+}
 
-@-moz-keyframes parpadeo{
-    0% { opacity: 1.0; }
-    50% { opacity: 0.0; }
-    100% { opacity: 1.0; }
+@-moz-keyframes parpadeo {
+    0% {
+        opacity: 1.0;
+    }
+
+    50% {
+        opacity: 0.0;
+    }
+
+    100% {
+        opacity: 1.0;
+    }
 }
 
 
 
 @-webkit-keyframes parpadeo {
-    0% { opacity: 1.0; }
-    50% { opacity: 0.0; }
-    100% { opacity: 1.0; }
+    0% {
+        opacity: 1.0;
+    }
+
+    50% {
+        opacity: 0.0;
+    }
+
+    100% {
+        opacity: 1.0;
+    }
 }
 
 @keyframes parpadeo {
-    0% { opacity: 1.0; }
-    50% { opacity: 0.0; }
-    100% { opacity: 1.0; }
+    0% {
+        opacity: 1.0;
+    }
+
+    50% {
+        opacity: 0.0;
+    }
+
+    100% {
+        opacity: 1.0;
+    }
 
 }
 
@@ -41,21 +65,21 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-  }
+}
 
-  .btn-circle.btn-sm, .btn-group-sm > .btn-circle.btn {
+.btn-circle.btn-sm,
+.btn-group-sm>.btn-circle.btn {
     height: 1.8rem;
     width: 1.8rem;
     font-size: 0.75rem;
-  }
+}
 
-  .btn-circle.btn-lg, .btn-group-lg > .btn-circle.btn {
+.btn-circle.btn-lg,
+.btn-group-lg>.btn-circle.btn {
     height: 3.5rem;
     width: 3.5rem;
     font-size: 1.35rem;
-  }
-
-
+}
 </style>
 
 
@@ -63,13 +87,7 @@ body {
     <div>
 
 
-
-
-
         <div class="container">
-
- 
-                        
             <div class="col-8 mx-auto row">
                 <div class="col-5 row mx-auto my-4 mx-auto card card shadow">
                     <div class="my-4">
@@ -88,19 +106,15 @@ body {
                     </div>
                 </div>
 
-                <div  class="col-5 row mx-auto my-4  mx-auto card card shadow">
+                <div class="col-5 row mx-auto my-4  mx-auto card card shadow">
                     <div class="my-4">
                         <label for="">Buscar agenda por fecha</label>
-                           <!--
+                        <!--
                                 :value-zone="57" :zone="57"
                              -->
                         <datetime v-model="final_date" title="Fecha de inicio" input-class="form-control"
-                            placeholder="Fecha de inicio." name="start_time" type="date"
-
-
-                            :value-zone="timezone" :zone="timezone"
-
-                            :auto="true" :flow="['date']">
+                            placeholder="Fecha de inicio." name="start_time" type="date" :value-zone="timezone"
+                            :zone="timezone" :auto="true" :flow="['date']">
                             <template slot="button-cancel">
                                 Cancelar
                             </template>
@@ -141,14 +155,11 @@ body {
                 </template>
 
                 <template slot="option" slot-scope="props">
-                    <button
-                    @click="saveLog(props.row.medicine_id , props.row.ya_tome)"
-                    v-bind:class="{
-                        'btn-dark' : props.row.ya_tome,
-                        'btn-success' : !props.row.ya_tome
-                    }"
-                        class="btn btn-circle"  data-bs-toggle="tooltip"
-                        data-bs-placement="right" title="Editar usuario">
+                    <button @click="saveLog(props.row.medicine_id, props.row.ya_tome)" v-bind:class="{
+                        'btn-dark': props.row.ya_tome,
+                        'btn-success': !props.row.ya_tome
+                    }" class="btn btn-circle" data-bs-toggle="tooltip" data-bs-placement="right"
+                        title="Editar usuario">
                         <i class="fa fa-check" aria-hidden="true"></i>
                     </button>
                 </template>
@@ -157,7 +168,8 @@ body {
         </div>
 
         <div class="col-md-12 my-8 table table-striped my-4 col-md-11 mx-auto card card-body  shadow border">
-            <v-client-table ref="worehouse_table" :columns="columnsFinance" :data="rowsFinance" :options="options_table">
+            <v-client-table ref="worehouse_table" :columns="columnsFinance" :data="rowsFinance"
+                :options="options_table">
                 <template slot="retiro" slot-scope="props">
                     <span v-if="props.row.retiro == 0">
                         <div class="text-success ">
@@ -172,14 +184,11 @@ body {
                 </template>
 
                 <template slot="option" slot-scope="props">
-                    <button
-                        @click="saveLog(props.row.medicine_id , props.row.ya_tome)"
-                        v-bind:class="{
-                        'btn-dark' : props.row.ya_tome,
-                        'btn-success' : !props.row.ya_tome
-                    }"
-                        class="btn btn-circle"  data-bs-toggle="tooltip"
-                        data-bs-placement="right" title="Editar usuario">
+                    <button @click="saveLog(props.row.medicine_id, props.row.ya_tome)" v-bind:class="{
+                        'btn-dark': props.row.ya_tome,
+                        'btn-success': !props.row.ya_tome
+                    }" class="btn btn-circle" data-bs-toggle="tooltip" data-bs-placement="right"
+                        title="Editar usuario">
                         <i class="fa fa-check" aria-hidden="true"></i>
                     </button>
                 </template>
@@ -188,7 +197,7 @@ body {
         </div>
 
         <button v-permissions="{ permiso: 'table.medication7ddd' }">test permisions</button>
-            <button class="btn btn-sm btn-warning" v-permissions="{ permiso: 'table.medication7' }">test permisions</button>
+        <button class="btn btn-sm btn-warning" v-permissions="{ permiso: 'table.medication7' }">test permisions</button>
 
 
         <div class="my-4 col-md-11 mx-auto card card-body  shadow border ">
@@ -221,7 +230,7 @@ export default {
     data() {
         return {
             final_date: new Date(),
-         timezone: "America/Bogota",
+            timezone: "America/Bogota",
             name: ["Disponivilidad"],
             progress: [],
             card: [],
@@ -269,15 +278,15 @@ export default {
                     'name': 'descripción',
                     'type_name': 'tipo',
                     'entity': 'entidad',
-                    'valor':'valor',
-                    'status':'estado',
+                    'valor': 'valor',
+                    'status': 'estado',
                     'created_at': 'apertura',
                     'expire': 'vence',
                     'term': 'dias plazo',
                     'days_true': 'dias transcurridos',
                     'days_restantes': 'dias restantes',
-                   // 'descript': 'desc',
-                    'profit_obtained':'ganancia obtenida',
+                    // 'descript': 'desc',
+                    'profit_obtained': 'ganancia obtenida',
                     'retiro': 'finaliza',
 
                 }
@@ -297,15 +306,15 @@ export default {
         this.getInvestments()
         this.getProgress()
         this.getComplements()
-       // this.getToken()
+        // this.getToken()
 
     },
     methods: {
-        getToken(){
+        getToken() {
             console.log(localStorage.getItem('access_token'), 'getToken')
         },
 
-        getInvestments(){
+        getInvestments() {
             axios.post("/api/finance/getInvestments")
                 //post('/api/times_zones/getComplement',{time_zone_id:this.wr.time_zone_id})
                 .then(res => {
@@ -316,9 +325,9 @@ export default {
 
 
                 }).catch(err => {
-                loading.hide()
-                //console.log(res, 'false')
-            })
+                    loading.hide()
+                    //console.log(res, 'false')
+                })
         },
 
         sendSearch() {
@@ -345,30 +354,30 @@ export default {
 
         saveLog(id = false, ya_tome = false) {
 
-            if(id && ya_tome){
+            if (id && ya_tome) {
                 this.$swal({
                     icon: 'error',
                     text: 'Ya habia registrado.',
                 });
-            return false;
+                return false;
             }
 
 
             var data_save = {
-                medicine_id:  ( id ? id : this.medicine_id  ) ,
-                date: ( this.final_date ? this.final_date : null )
+                medicine_id: (id ? id : this.medicine_id),
+                date: (this.final_date ? this.final_date : null)
             }
 
             axios.post("/api/medic/save_log", data_save)
-            .then(res => {
+                .then(res => {
 
-                this.$swal({
-                    icon: 'success',
-                    text: 'Guardo correctamente.',
-                });
-                this.medicine_id = null
-                this.getProgress()
-                this.getComplements()
+                    this.$swal({
+                        icon: 'success',
+                        text: 'Guardo correctamente.',
+                    });
+                    this.medicine_id = null
+                    this.getProgress()
+                    this.getComplements()
 
                 }).catch(err => {
                     this.$swal({

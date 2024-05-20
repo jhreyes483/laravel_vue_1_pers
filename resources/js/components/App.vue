@@ -51,7 +51,7 @@
                     </ul>
                     <ul v-if="checkToken" class="navbar-nav mb-2 mb-lg-0 float-end">
                         <li class="nav-item">
-                            <div @click="logout()" style="  cursor: pointer;" class="nav-link">Cerrar sesión</div>
+                            <div @click="logout()" style="cursor: pointer;" class="nav-link">Cerrar sesión</div>
                         </li>
                         <li v-if="!checkToken" class="nav-item">
                             <router-link active-class="active" to="/login" class="nav-link">Login</router-link>
@@ -87,9 +87,22 @@ export default {
 
     methods: {
         logout() {
+            console.log("cerro")
             localStorage.removeItem('access_token');
-            alert('cerror sesión');
-            return this.$route.path === '/';
+  
+            this.$swal({
+                icon: 'success',
+                title: 'Sesión cerrada',
+                text: 'Has cerrado sesión correctamente.',
+                confirmButtonText: 'OK'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.$router.push('/').catch(err => {
+                        console.error("Error al navegar:", err);
+                    });
+                }
+                this.checkToken = false;
+            });
         },
     },
     components: {},
