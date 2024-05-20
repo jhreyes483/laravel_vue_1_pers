@@ -16,7 +16,12 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item" v-if="checkToken">
+                        <li>
+                            <img class="avatar_mask" alt="Alegra"
+                                src="https://www.offshorebusinessprocessing.com/images/icon-services-it-lightblue.svg">
+                        </li>
+
+                        <li class="nav-item mt-2" v-if="checkToken">
                             <router-link active-class="active" to="/" class="nav-link active"
                                 aria-current="page">Inicio</router-link>
                         </li>
@@ -28,12 +33,12 @@
                             <router-link active-class="active" to="/contacto" class="nav-link">Contacto</router-link>
                         </li>
                          -->
-                        <li class="nav-item" v-if="checkToken">
-                            <router-link active-class="active" to="/control_usuarios" class="nav-link">Control de
+                        <li class="nav-item mb-2" v-if="checkToken">
+                            <router-link active-class="active" to="/control_usuarios" class="nav-link mt-2">Control de
                                 usuarios</router-link>
                         </li>
-                        <li class="nav-item" v-if="checkToken">
-                            <router-link active-class="active" to="/medicacion" class="nav-link">Home</router-link>
+                        <li class="nav-item mb-2" v-if="checkToken">
+                            <router-link active-class="active" to="/medicacion" class="nav-link mt-2">Home</router-link>
                         </li>
                     </ul>
 
@@ -96,3 +101,30 @@ export default {
 
 }
 </script>
+
+
+<style>
+.avatar_mask {
+    width: 50px;
+    height: 50px;
+    border-radius: 50px;
+    overflow: hidden;
+    margin-right: 6px;
+    box-shadow: 12px;
+    animation: palpitar infinite 1s linear;
+}
+
+@keyframes palpitar {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+</style>

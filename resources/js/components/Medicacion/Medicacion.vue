@@ -68,8 +68,7 @@ body {
 
         <div class="container">
 
-            <button v-permissions="{ permiso: 'table.medication7ddd' }">Hacer algo</button>
-            <button v-permissions="{ permiso: 'table.medication7' }">Hacer algo</button>
+ 
                         
             <div class="col-8 mx-auto row">
                 <div class="col-5 row mx-auto my-4 mx-auto card card shadow">
@@ -188,6 +187,9 @@ body {
             </v-client-table>
         </div>
 
+        <button v-permissions="{ permiso: 'table.medication7ddd' }">test permisions</button>
+            <button class="btn btn-sm btn-warning" v-permissions="{ permiso: 'table.medication7' }">test permisions</button>
+
 
         <div class="my-4 col-md-11 mx-auto card card-body  shadow border ">
             <Progress :progress="progress" :name="name" @getComplements="getProgress"></Progress>
@@ -202,6 +204,7 @@ body {
             </div>
         </main>
     </div>
+
 </template>
 
 
