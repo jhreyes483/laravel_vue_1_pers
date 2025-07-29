@@ -175,6 +175,13 @@ body {
                         {{props.row.days_restantes}}
                     </span>
                   </template>
+                  <template slot="term" slot-scope="props">
+                    <span v-if="props.row.investment_type_id == 1">
+                        {{props.row.term}}
+                    </span>
+                  </template>
+
+                  
 
 
                 <template slot="retiro" slot-scope="props">
@@ -189,6 +196,8 @@ body {
                         </div>
                     </span>
                 </template>
+
+            
 
                 <template slot="pago" slot-scope="props">
                   <div class="d-flex">
