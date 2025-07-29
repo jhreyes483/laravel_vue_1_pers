@@ -26,6 +26,7 @@ class MedicController extends Controller
             $params   = ['p_user_id'=>1, 'p_data_serach' => $dateSearch];
             $all      = $this->execSP('lsp_get_earrings' ,$params);
             $dispo    = $this->execSP('lsp_get_available', []);
+            $clean    = $this->execSP('lsp_limpiar_log_medicines', []);
 
 
             $dateProcedureOne   = '2022-08-27 19:00:00';

@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 20-05-2024 a las 21:36:13
+-- Tiempo de generación: 24-10-2024 a las 03:35:58
 -- Versión del servidor: 8.0.30
--- Versión de PHP: 8.1.9
+-- Versión de PHP: 8.1.10
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -25,7 +25,7 @@ DELIMITER $$
 --
 -- Procedimientos
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `lsp_get_available` ()   BEGIN
+CREATE   PROCEDURE `lsp_get_available` ()   BEGIN
 SELECT 
 FORMAT( ((quantity*2)/30) ,2)mounts, 
 FORMAT((quantity*2)  ,2) days, 
@@ -35,7 +35,7 @@ FORMAT(((quantity*2)/360)  ,2) years,
 from medicines  where id = 1;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `lsp_get_earrings` (IN `p_user_id` INT, IN `p_date_search` DATE)   BEGIN
+CREATE   PROCEDURE `lsp_get_earrings` (IN `p_user_id` INT, IN `p_date_search` DATE)   BEGIN
 SET sql_mode=(SELECT REPLACE(@@sql_mode,"ONLY_FULL_GROUP_BY",""));
 SELECT 
          m.id medicine_id, 
@@ -66,7 +66,7 @@ SELECT
          ORDER BY lm.id DESC;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `lsp_get_investments` ()   BEGIN
+CREATE   PROCEDURE `lsp_get_investments` ()   BEGIN
 
 	SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));	 
 	SELECT
@@ -100,7 +100,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `lsp_get_investments` ()   BEGIN
     
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `lsp_get_permissions` (IN `p_offset` INT, IN `p_limit` INT)   BEGIN
+CREATE   PROCEDURE `lsp_get_permissions` (IN `p_offset` INT, IN `p_limit` INT)   BEGIN
 
 	SET @count = (
     SELECT count(id) 
@@ -115,7 +115,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `lsp_get_permissions` (IN `p_offset`
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `lsp_get_progress__bar_lv1` (IN `p_user_id` INT)   BEGIN
+CREATE   PROCEDURE `lsp_get_progress__bar_lv1` (IN `p_user_id` INT)   BEGIN
 	SELECT m.id, m.name, m.quantity, 
 	(select max(quantity) from  medicines where is_quantity = 1 and um.user_id = p_user_id  ) max_quantity
 	from
@@ -127,7 +127,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `lsp_get_progress__bar_lv1` (IN `p_u
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `lsp_get_users` (IN `p_offset` INT, IN `p_limit` INT)   BEGIN
+CREATE   PROCEDURE `lsp_get_users` (IN `p_offset` INT, IN `p_limit` INT)   BEGIN
 
 	SET @count = (
     SELECT count(id) 
@@ -142,7 +142,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `lsp_get_users` (IN `p_offset` INT, 
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `lsp_save_log` (IN `p_medicine_id` INT, IN `p_user_id` INT, IN `p_date` DATETIME)   BEGIN
+CREATE   PROCEDURE `lsp_save_log` (IN `p_medicine_id` INT, IN `p_user_id` INT, IN `p_date` DATETIME)   BEGIN
 
 	UPDATE medicines
 	SET 
@@ -1084,20 +1084,30 @@ INSERT INTO `log_medicines` (`id`, `created_at`, `updated_at`, `medicine_id`, `u
 (814, '2023-11-29 11:50:34', '2023-11-29 11:50:34', 14, 1),
 (815, '2023-11-30 11:50:42', '2023-11-30 11:50:42', 14, 1),
 (816, '2023-11-30 11:50:44', '2023-11-30 11:50:44', 9, 1),
-(817, '2024-05-14 11:52:25', '2024-05-14 11:52:25', 9, 1),
-(818, '2024-05-14 11:52:25', '2024-05-14 11:52:25', 1, 1),
-(819, '2024-05-15 11:52:25', '2024-05-15 11:52:25', 9, 1),
-(820, '2024-05-15 11:52:25', '2024-05-15 11:52:25', 4, 1),
-(821, '2024-05-16 11:52:25', '2024-05-16 11:52:25', 9, 1),
-(822, '2024-05-16 11:52:25', '2024-05-16 11:52:25', 1, 1),
-(823, '2024-05-17 11:52:25', '2024-05-17 11:52:25', 9, 1),
-(824, '2024-05-17 11:52:25', '2024-05-17 11:52:25', 4, 1),
-(825, '2024-05-18 11:52:25', '2024-05-18 11:52:25', 9, 1),
-(826, '2024-05-18 11:52:25', '2024-05-18 11:52:25', 1, 1),
-(827, '2024-05-19 11:52:25', '2024-05-19 11:52:25', 9, 1),
-(828, '2024-05-19 11:52:25', '2024-05-19 11:52:25', 4, 1),
-(830, '2024-05-19 11:52:25', '2024-05-19 11:52:25', 7, 1),
-(831, '2024-05-19 11:52:25', '2024-05-19 11:52:25', 13, 1);
+(817, '2024-10-14 11:52:25', '2024-10-14 11:52:25', 9, 1),
+(818, '2024-10-14 11:52:25', '2024-10-14 11:52:25', 1, 1),
+(819, '2024-10-15 11:52:25', '2024-10-15 11:52:25', 9, 1),
+(820, '2024-10-15 11:52:25', '2024-10-15 11:52:25', 4, 1),
+(821, '2024-10-16 11:52:25', '2024-10-16 11:52:25', 9, 1),
+(822, '2024-10-16 11:52:25', '2024-10-16 11:52:25', 1, 1),
+(823, '2024-10-17 11:52:25', '2024-10-17 11:52:25', 9, 1),
+(824, '2024-10-17 11:52:25', '2024-10-17 11:52:25', 4, 1),
+(825, '2024-10-18 11:52:25', '2024-10-18 11:52:25', 9, 1),
+(826, '2024-10-18 11:52:25', '2024-10-18 11:52:25', 1, 1),
+(827, '2024-10-19 11:52:25', '2024-10-19 11:52:25', 9, 1),
+(828, '2024-10-19 11:52:25', '2024-10-19 11:52:25', 4, 1),
+(830, '2024-10-19 11:52:25', '2024-10-19 11:52:25', 7, 1),
+(831, '2024-10-19 11:52:25', '2024-10-19 11:52:25', 13, 1),
+(832, '2024-10-20 22:32:45', '2024-10-20 22:32:45', 13, 1),
+(833, '2024-10-20 22:32:47', '2024-10-20 22:32:47', 7, 1),
+(834, '2024-10-21 22:32:54', '2024-10-21 22:32:54', 7, 1),
+(835, '2024-10-21 22:32:59', '2024-10-21 22:32:59', 13, 1),
+(836, '2024-10-22 22:33:06', '2024-10-22 22:33:06', 13, 1),
+(837, '2024-10-22 22:33:09', '2024-10-22 22:33:09', 7, 1),
+(838, '2024-10-23 22:33:40', '2024-10-23 22:33:40', 7, 1),
+(839, '2024-10-23 22:33:45', '2024-10-23 22:33:45', 13, 1),
+(840, '2024-10-20 22:34:11', '2024-10-20 22:34:11', 9, 1),
+(841, '2024-10-20 22:34:18', '2024-10-20 22:34:18', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -1123,18 +1133,18 @@ CREATE TABLE `medicines` (
 --
 
 INSERT INTO `medicines` (`id`, `name`, `status`, `descript`, `quantity`, `interval_days`, `created_at`, `update_at`, `is_quantity`, `order_`) VALUES
-(1, 'dutasterida', 1, 'Día por medio', 16, 2, '2023-02-04 16:09:36', '2023-02-04 16:09:36', 1, 1),
+(1, 'dutasterida', 1, 'Día por medio', 15, 2, '2023-02-04 16:09:36', '2023-02-04 16:09:36', 1, 1),
 (2, 'vitamina d', 1, 'Una semanal', 12, 6, '2023-02-04 16:09:36', '2023-02-04 16:09:36', 1, 4),
 (3, 'vitamina c', 1, 'Una dosis diaria', 53, 2, '2023-02-04 16:09:36', '2023-02-04 16:09:36', 1, 3),
 (4, 'vitaminas dtr pulido', 1, 'Día por medio', 13, 2, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 1, 2),
 (5, 'tricobit', 1, 'diario', -15, 3, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, NULL),
-(7, 'colgate', 1, 'diario', -8, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, NULL),
+(7, 'colgate', 1, 'diario', -12, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, NULL),
 (8, 'Peluqueada', 1, 'diario', -20, 30, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, NULL),
-(9, 'llt', 1, 'diario', -324, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, NULL),
+(9, 'llt', 1, 'diario', -325, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, NULL),
 (10, 'recorte bello', 1, '15 días', -19, 15, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, NULL),
 (11, 'lubriden', 1, 'Dia por medio', -16, 2, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, NULL),
 (12, 'biotin', 1, 'N/A', 13, 6, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 1, 5),
-(13, 'cicatricure', 1, NULL, -10, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, 6),
+(13, 'cicatricure', 1, NULL, -14, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, 6),
 (14, 'ojer', 1, NULL, -10, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, 7);
 
 -- --------------------------------------------------------
@@ -1415,7 +1425,8 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (22, 'App\\Models\\User', 1, 'auth_token', 'c61184ec7e7a68b63e084e262e603afd2e9d4fbb1856b49b4fe99dae02a69850', '[\"*\"]', '2023-12-09 09:26:05', '2023-12-09 09:24:26', '2023-12-09 09:26:05'),
 (23, 'App\\Models\\User', 1, 'auth_token', 'dfdf0f43e5642b510c9110e58cef81d312feb4b7b6f83307246d48aff3c6e240', '[\"*\"]', '2023-12-09 09:26:19', '2023-12-09 09:26:05', '2023-12-09 09:26:19'),
 (24, 'App\\Models\\User', 1, 'auth_token', 'f002e3c6b15ef361f3aba67d2d1a364658d3bf3aab3e24ec899ce9c472150206', '[\"*\"]', '2024-05-21 02:00:23', '2024-05-21 01:49:35', '2024-05-21 02:00:23'),
-(25, 'App\\Models\\User', 1, 'auth_token', 'c3fc85d8b4b6a5a0abdf9da409277abf3ef697aa3761e7367fa9ba613178fc9f', '[\"*\"]', '2024-05-21 02:35:09', '2024-05-21 02:03:16', '2024-05-21 02:35:09');
+(25, 'App\\Models\\User', 1, 'auth_token', 'c3fc85d8b4b6a5a0abdf9da409277abf3ef697aa3761e7367fa9ba613178fc9f', '[\"*\"]', '2024-05-21 02:35:09', '2024-05-21 02:03:16', '2024-05-21 02:35:09'),
+(26, 'App\\Models\\User', 1, 'auth_token', '1546af54c6541ae56059d1ff5671388c2e0ad753f527c080a37b5f8555968fb8', '[\"*\"]', '2024-10-24 08:34:18', '2024-10-24 08:29:06', '2024-10-24 08:34:18');
 
 -- --------------------------------------------------------
 
@@ -1497,7 +1508,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Javier Reyes Neira', 'jav-rn@outlook.com', NULL, '$2y$10$3bHs9tySr64PGnSqiUCbrOrFV0019P4rh36vwrkp97KdEMH.Kc2gq', NULL, NULL, NULL);
+(1, 'Javier Reyes Neira', 'jav-rn@hotmail.com', NULL, '$2y$10$3bHs9tySr64PGnSqiUCbrOrFV0019P4rh36vwrkp97KdEMH.Kc2gq', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1736,7 +1747,7 @@ ALTER TABLE `investment_payments`
 -- AUTO_INCREMENT de la tabla `log_medicines`
 --
 ALTER TABLE `log_medicines`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=832;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=842;
 
 --
 -- AUTO_INCREMENT de la tabla `medicines`
@@ -1772,7 +1783,7 @@ ALTER TABLE `permissions`
 -- AUTO_INCREMENT de la tabla `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`

@@ -25,6 +25,8 @@ Route::middleware([/*'auth:api'*/  'auth:api'])->group(function () {
     Route::post('/medic/save_log', [\App\Http\Controllers\MedicController::class, 'saveLog']);
     Route::post('/medic/search', [\App\Http\Controllers\MedicController::class, 'search']);
     Route::post('finance/getInvestments', [\App\Http\Controllers\FinanceController::class, 'getInvestments']);
+    Route::post('finance/savePago', [\App\Http\Controllers\FinanceController::class, 'savePago']);
+
 
     /* permisions */
     Route::post('/get_users', [\App\Http\Controllers\RoleAssignController::class, 'getUsers']);

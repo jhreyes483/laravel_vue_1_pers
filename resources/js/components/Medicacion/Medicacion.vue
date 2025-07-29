@@ -170,6 +170,13 @@ body {
         <div class="col-md-12 my-8 table table-striped my-4 col-md-11 mx-auto card card-body  shadow border">
             <v-client-table ref="worehouse_table" :columns="columnsFinance" :data="rowsFinance"
                 :options="options_table">
+                  <template slot="days_restantes" slot-scope="props">
+                    <span v-if="props.row.investment_type_id == 1">
+                        {{props.row.days_restantes}}
+                    </span>
+                  </template>
+
+
                 <template slot="retiro" slot-scope="props">
                     <span v-if="props.row.retiro == 0">
                         <div class="text-success ">
@@ -183,17 +190,35 @@ body {
                     </span>
                 </template>
 
-                <template slot="option" slot-scope="props">
-                    <button @click="saveLog(props.row.medicine_id, props.row.ya_tome)" v-bind:class="{
-                        'btn-dark': props.row.ya_tome,
-                        'btn-success': !props.row.ya_tome
-                    }" class="btn btn-circle" data-bs-toggle="tooltip" data-bs-placement="right"
-                        title="Editar usuario">
-                        <i class="fa fa-check" aria-hidden="true"></i>
-                    </button>
+                <template slot="pago" slot-scope="props">
+                  <div class="d-flex">
+                    <input
+                        type="number"
+                        class="form-control form-control-sm me-2"
+                        placeholder="Valor"
+                        v-model.number="pagosInputs[props.row.id]"
+                        :key="'pago-input-' + props.row.id" 
+                        style="width: 100px;"
+                          
+                    />
+                <button
+                    @click="savePago(props.row.id, pagosInputs[props.row.id])"
+                    class="btn btn-success btn-sm"
+                    title="Registrar pago"
+                 >
+                 <i class="fa fa-check" aria-hidden="true"></i>
+                </button>
+                    </div>
                 </template>
 
+
             </v-client-table>
+        <div class="my-3 col-md-11 mx-auto card card-body shadow border">
+            <h5>Resumen financiero</h5>
+            <p><strong>Total invertido:</strong> ${{ totalInversion.toLocaleString('es-CO') }}</p>
+            <p><strong>Ganancia total obtenida:</strong>${{ totalGanancia.toLocaleString('es-CO') }}</p>
+            <p><strong>Capital total:</strong> ${{  totalCapital.toLocaleString('es-CO') }}</p>
+        </div>
         </div>
 
         <button v-permissions="{ permiso: 'table.medication7ddd' }">test permisions</button>
@@ -229,6 +254,10 @@ export default {
 
     data() {
         return {
+            totalInversion: 0,
+            totalGanancia: 0,
+            totalCapital: 0,
+            pagosInputs: {},
             final_date: new Date(),
             timezone: "America/Bogota",
             name: ["Disponivilidad"],
@@ -255,6 +284,7 @@ export default {
                 'option'
             ],
 
+
             rowsFinance: [],
             columnsFinance: [
                 'name',
@@ -269,6 +299,7 @@ export default {
                 'days_restantes',
                 'profit_obtained',
                 'retiro',
+                'pago'
             ],
 
             view_mode: 'table',
@@ -288,6 +319,8 @@ export default {
                     // 'descript': 'desc',
                     'profit_obtained': 'ganancia obtenida',
                     'retiro': 'finaliza',
+                    'pago': 'registrar pago',
+                    
 
                 }
             },
@@ -313,6 +346,38 @@ export default {
         getToken() {
             console.log(localStorage.getItem('access_token'), 'getToken')
         },
+        savePago(id,value) {
+                console.log("pago",{value,id})
+            if (!value || isNaN(value)) {
+                this.$swal({
+                    icon: 'error',
+                    text: 'Debe ingresar un value válido.',
+                });
+                return;
+            }
+
+            const data_save = {
+                investment_id: id,
+                value: value
+            };
+    
+            axios.post("/api/finance/savePago", data_save)
+                .then(res => {
+                    this.$swal({
+                        icon: 'success',
+                        text: 'Pago registrado correctamente.',
+                    });
+                    // Opcional: limpiar input
+                    this.$set(this.pagosInputs, id, null);
+                    this.getInvestments(); // refresca tabla si es necesario
+                })
+                .catch(err => {
+                    this.$swal({
+                        icon: 'error',
+                        text: 'Error al registrar el pago.',
+                    });
+                });
+        },
 
         getInvestments() {
             axios.post("/api/finance/getInvestments")
@@ -320,6 +385,7 @@ export default {
                 .then(res => {
                     var data = res.data.data
                     this.rowsFinance = data
+                    this.calculateTotal();
                     console.log(this.rowsFinance, 'finanzas')
 
 
@@ -385,6 +451,28 @@ export default {
                         text: 'Error al registrar',
                     });
                 })
+        },
+        calculateTotal() {
+
+            let totalInversion = 0;
+            let totalGanancia = 0;
+            let totalCapital = 0;
+
+            this.rowsFinance.forEach(item => {
+            const cleanValor = Number(
+                String(item.valor).replace(/[$.\s']/g, '')
+            ) || 0;
+
+            const cleanGanancia = Number(
+                String(item.profit_obtained).replace(/[$.\s']/g, '')
+            ) || 0;
+            console.log(cleanGanancia)
+            totalInversion += cleanValor;
+            totalGanancia += cleanGanancia;
+            });
+            this.totalGanancia  = totalGanancia;
+            this.totalInversion = totalInversion;
+            this.totalCapital  =  totalInversion + totalGanancia;
         },
         getProgress() {
             var data_save = {

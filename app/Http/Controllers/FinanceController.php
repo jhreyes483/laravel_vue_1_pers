@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Traits\Sp;
 use Illuminate\Http\Request;
+use App\Models\InvestmentPayment;
+use Carbon\Carbon;
 
 class FinanceController extends Controller
 {
@@ -25,32 +27,47 @@ class FinanceController extends Controller
         return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Done'], $r['data']);
     }
 
+    public function savePago(Request $request){
+        $validated = $request->validate([
+            'investment_id' => 'required|exists:investments,id',
+            'value' => 'required|numeric|min:0.01'
+        ]);
+        $payment = new InvestmentPayment();
+        $payment->investment_id   = $request->investment_id;
+        $payment->current_profit  = $request->value;
+        $payment->status          = 1;
+        $payment->created_at      = Carbon::now();
+        $payment->save();
+        return $this->responseApi->response(true, [
+            'type' => 'success',
+            'content' => 'Pago registrado correctamente.'
+        ], []);
+    }
+
 
     public function formato_pesos_colombianos($numero, $signoPeso = '$ ') {
-        $decimas = strlen($numero);
-        if($decimas <= 3){
-            return $numero;
-        }else{
-            $result= '';
-            $tmp        = str_split(strrev($numero),1);
-            $iterMil    = 0;
-            $iterMillon = 0;
-            foreach ($tmp  as  $decima ){
-                $iterMillon ++;
-                $iterMil    ++;
-                if($iterMil == 3 && $iterMillon != 6 ){
-                    $decima = $decima.'.';
-                    $iterMil= 0;
-                }
-                else if( $iterMillon == 6 ){
-                    $decima = $decima."'";
-                    $iterMillon= 0;
-                }
-                $result.= $decima;
-            }
-            $result = strrev($result);
-            return $signoPeso.$result;
+    // Limpiar entrada
+    $numero = preg_replace('/[^\d]/', '', $numero);
+    $numero = (string) $numero;
+
+    // Revertimos el número para agrupar fácilmente desde el final
+    $reversed = strrev($numero);
+    $chunks = str_split($reversed, 3);
+
+    // Formateamos con punto y apóstrofe
+    $formatted = '';
+    foreach ($chunks as $index => $chunk) {
+        if ($index == 0) {
+            $formatted .= $chunk;
+        } elseif ($index == 1) {
+            $formatted .= '.' . $chunk;
+        } else {
+            $formatted .= "'" . $chunk;
         }
+    }
+
+    // Invertimos de nuevo y retornamos
+    return $signoPeso . strrev($formatted);
     }
 
 }
