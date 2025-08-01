@@ -11,6 +11,7 @@ import axios from 'axios';
 //Importamos y configuramos el Vue-router
 import VueRouter from 'vue-router';
 import {routes} from './routes';
+
 import { verificarPermiso } from './utils/utils';
 import  {existToken } from './utils/functions/auth';
 

@@ -11,7 +11,7 @@
     },
     "devDependencies": {
         "axios": "^0.21",
-        "bootstrap": "^4.0.0",
+        "bootstrap": "^4.6.2",
         "jquery": "^3.7.1",
         "laravel-mix": "^6.0.49",
         "lodash": "^4.17.19",
@@ -42,7 +42,7 @@
         "vue-datetime": "^1.0.0-beta.11",
         "vue-form-wizard": "^0.8.4",
         "vue-infinite-loading": "^2.4.5",
-        "vue-js-modal": "^2.0.0-rc.6",
+        "vue-js-modal": "^2.0.1",
         "vue-loading-overlay": "^3.2.0",
         "vue-moment": "^4.1.0",
         "vue-router": "^3.6.5",

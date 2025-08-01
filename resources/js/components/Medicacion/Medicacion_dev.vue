@@ -81,7 +81,15 @@ body {
     font-size: 1.35rem;
 }
 </style>
-
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+    integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+    crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+    crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+    integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+    crossorigin="anonymous"></script>
 
 <template>
     <div>
@@ -158,8 +166,7 @@ body {
                     <button @click="saveLog(props.row.medicine_id, props.row.ya_tome)" v-bind:class="{
                         'btn-dark': props.row.ya_tome,
                         'btn-success': !props.row.ya_tome
-                    }" class="btn btn-circle" data-bs-toggle="tooltip" data-bs-placement="right"
-                        title="Regitrar">
+                    }" class="btn btn-circle" data-bs-toggle="tooltip" data-bs-placement="right" title="Regitrar">
                         <i class="fa fa-check" aria-hidden="true"></i>
                     </button>
                 </template>
@@ -170,18 +177,18 @@ body {
         <div class="col-md-12 my-8 table table-striped my-4 col-md-11 mx-auto card card-body  shadow border">
             <v-client-table ref="worehouse_table" :columns="columnsFinance" :data="rowsFinance"
                 :options="options_table">
-                  <template slot="days_restantes" slot-scope="props">
+                <template slot="days_restantes" slot-scope="props">
                     <span v-if="props.row.investment_type_id == 1">
                         {{ props.row.days_restantes }}
                     </span>
-                  </template>
-                  <template slot="term" slot-scope="props">
+                </template>
+                <template slot="term" slot-scope="props">
                     <span v-if="props.row.investment_type_id == 1">
                         {{ props.row.term }}
                     </span>
-                  </template>
+                </template>
 
-                  
+
 
 
                 <template slot="retiro" slot-scope="props">
@@ -197,59 +204,57 @@ body {
                     </span>
                 </template>
 
-            
+
 
                 <template slot="pago" slot-scope="props">
-                  <div class="d-flex">
-                    <input
-                        type="number"
-                        class="form-control form-control-sm me-2"
-                        placeholder="Valor"
-                        v-model.number="pagosInputs[props.row.id]"
-                        :key="'pago-input-' + props.row.id" 
-                        style="width: 100px;"
-                          
-                    />
-                <button
-                    @click="savePago(props.row.id, pagosInputs[props.row.id])"
-                    class="btn btn-success btn-sm"
-                    title="Registrar pago"
-                 >
-                 <i class="fa fa-check" aria-hidden="true"></i>
-                </button>
+                    <div class="d-flex">
+                        <input type="number" class="form-control form-control-sm me-2" placeholder="Valor"
+                            v-model.number="pagosInputs[props.row.id]" :key="'pago-input-' + props.row.id"
+                            style="width: 100px;" />
+                        <button @click="savePago(props.row.id, pagosInputs[props.row.id])"
+                            class="btn btn-success btn-sm" title="Registrar pago">
+                            <i class="fa fa-check" aria-hidden="true"></i>
+                        </button>
                     </div>
                 </template>
 
 
             </v-client-table>
-        <div class="my-3 col-md-11 mx-auto card card-body shadow border">
-            <h5>Resumen financiero</h5>
-            <p><strong>Total invertido:</strong> ${{ totalInversion.toLocaleString('es-CO') }}</p>
-            <p><strong>Ganancia total obtenida:</strong>${{ totalGanancia.toLocaleString('es-CO') }}</p>
-            <p><strong>Capital total:</strong> ${{  totalCapital.toLocaleString('es-CO') }}</p>
-        </div>
-        </div>
-
-        <button class="button_action" @click.prevent="openModal()"></button>
-
-
-        <button v-permissions="{ permiso: 'table.medication7ddd' }">test permisions</button>
-        <button class="btn btn-sm btn-warning" v-permissions="{ permiso: 'table.medication7' }">test permisions</button>
-
-
-        <div class="my-4 col-md-11 mx-auto card card-body  shadow border ">
-            <Progress :progress="progress" :name="name" @getComplements="getProgress"></Progress>
-        </div>
-
-        <DetailMovements ref="ModalDetail" @confirm="handleConfirm" />
-        <CardFoor :props="card"></CardFoor>
-
-        <main class="py-4">
-            <div class="container">
-                <router-view></router-view>
+            <div class="my-3 col-md-11 mx-auto card card-body shadow border">
+                <h5>Resumen financiero</h5>
+                <p><strong>Total invertido:</strong> ${{ totalInversion.toLocaleString('es-CO') }}</p>
+                <p><strong>Ganancia total obtenida:</strong>${{ totalGanancia.toLocaleString('es-CO') }}</p>
+                <p><strong>Capital total---:</strong> ${{ totalCapital.toLocaleString('es-CO') }}</p>
             </div>
-        </main>
-    </div>
+        </div>
+
+
+        <div class="button_action" @click.prevent="$modal.show('createTimeZoneCity')"
+            v-if="can(['create_time_zone_city'], 'Crear franjas')" v-tooltip="'create_time_zone_city'"
+            style="cursor:pointer;" data-toggle="tooltip" data-placement="top" title="Agregar franja a una bodega">
+
+            <button v-permissions="{ permiso: 'table.medication7ddd' }">test permisions</button>
+            <button class="btn btn-sm btn-warning" v-permissions="{ permiso: 'table.medication7' }">test
+                permisions</button>
+
+
+            <div class="my-4 col-md-11 mx-auto card card-body  shadow border ">
+                <Progress :progress="progress" :name="name" @getComplements="getProgress"></Progress>
+            </div>
+
+
+
+
+
+
+            <CardFoor :props="card"></CardFoor>
+
+            <main class="py-4">
+                <div class="container">
+                    <router-view></router-view>
+                </div>
+            </main>
+        </div>
 
 </template>
 
@@ -258,12 +263,12 @@ body {
 <script>
 import Progress from "../General/Progress.vue";
 import CardFoor from "../General/CardFoor.vue";
-import DetailMovements from './components/DetailMovements.vue';
+//import DetailMovements from './components/DetailMovements.vue';
 export default {
     components: {
         Progress,
         CardFoor,
-        DetailMovements
+        //DetailMovements
     },
 
     data() {
@@ -360,13 +365,6 @@ export default {
         getToken() {
             console.log(localStorage.getItem('access_token'), 'getToken')
         },
-        openModal() {
-            this.$refs.ModalDetail.open();
-        },
-          handleConfirm() {
-            // lógica cuando el modal se confirma
-        },
-
         savePago(id,value) {
                 console.log("pago",{value,id})
             if (!value || isNaN(value)) {
