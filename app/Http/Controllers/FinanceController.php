@@ -44,6 +44,31 @@ class FinanceController extends Controller
         ], []);
     }
 
+    public function getPagosByInvestment(Request $request)
+    {
+        $validated = $request->validate([
+            'investment_id' => 'required|exists:investments,id'
+        ]);
+
+        // Obtener los pagos asociados
+        $pagos = InvestmentPayment::where('investment_id', $request->investment_id)
+            ->orderByDesc('created_at')
+            ->get([
+                'id',
+                'current_profit as value',
+                'status',
+                'created_at'
+            ]);
+       
+
+        // Devolver respuesta estructurada
+        return $this->responseApi->response(true, [
+            'type'    => 'success',
+            'content' => 'Pagos obtenidos correctamente.'
+        ], $pagos->toArray());
+    }
+
+
 
     public function formato_pesos_colombianos($numero, $signoPeso = '$ ') {
     // Limpiar entrada

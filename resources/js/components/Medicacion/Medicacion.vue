@@ -158,9 +158,13 @@ body {
                     <button @click="saveLog(props.row.medicine_id, props.row.ya_tome)" v-bind:class="{
                         'btn-dark': props.row.ya_tome,
                         'btn-success': !props.row.ya_tome
-                    }" class="btn btn-circle" data-bs-toggle="tooltip" data-bs-placement="right"
-                        title="Regitrar">
+                    }" class="btn btn-circle" data-bs-toggle="tooltip" data-bs-placement="right" title="Regitrar">
                         <i class="fa fa-check" aria-hidden="true"></i>
+                    </button>
+                    <button  
+                    @click="openModalWithMedicines(props.row.medicine_id)" class="btn btn-circle btn-primary"
+                        title="Ver detalles">
+                        <i class="fa fa-eye" aria-hidden="true"></i>
                     </button>
                 </template>
 
@@ -170,18 +174,18 @@ body {
         <div class="col-md-12 my-8 table table-striped my-4 col-md-11 mx-auto card card-body  shadow border">
             <v-client-table ref="worehouse_table" :columns="columnsFinance" :data="rowsFinance"
                 :options="options_table">
-                  <template slot="days_restantes" slot-scope="props">
+                <template slot="days_restantes" slot-scope="props">
                     <span v-if="props.row.investment_type_id == 1">
                         {{ props.row.days_restantes }}
                     </span>
-                  </template>
-                  <template slot="term" slot-scope="props">
+                </template>
+                <template slot="term" slot-scope="props">
                     <span v-if="props.row.investment_type_id == 1">
                         {{ props.row.term }}
                     </span>
-                  </template>
+                </template>
 
-                  
+
 
 
                 <template slot="retiro" slot-scope="props">
@@ -197,37 +201,32 @@ body {
                     </span>
                 </template>
 
-            
+
 
                 <template slot="pago" slot-scope="props">
-                  <div class="d-flex">
-                    <input
-                        type="number"
-                        class="form-control form-control-sm me-2"
-                        placeholder="Valor"
-                        v-model.number="pagosInputs[props.row.id]"
-                        :key="'pago-input-' + props.row.id" 
-                        style="width: 100px;"
-                          
-                    />
-                <button
-                    @click="savePago(props.row.id, pagosInputs[props.row.id])"
-                    class="btn btn-success btn-sm"
-                    title="Registrar pago"
-                 >
-                 <i class="fa fa-check" aria-hidden="true"></i>
-                </button>
+                    <div class="d-flex">
+                        <input type="number" class="form-control form-control-sm me-2" placeholder="Valor"
+                            v-model.number="pagosInputs[props.row.id]" :key="'pago-input-' + props.row.id"
+                            style="width: 100px;" />
+                        <button @click="savePago(props.row.id, pagosInputs[props.row.id])"
+                            class="btn btn-success btn-sm" title="Registrar pago">
+                            <i class="fa fa-check" aria-hidden="true"></i>
+                        </button>
+                        <button @click="openModalWithMovement(props.row.id)" class="btn btn-info btn-sm"
+                            title="Ver detalles">
+                            <i class="fa fa-eye" aria-hidden="true"></i>
+                        </button>
                     </div>
                 </template>
 
 
             </v-client-table>
-        <div class="my-3 col-md-11 mx-auto card card-body shadow border">
-            <h5>Resumen financiero</h5>
-            <p><strong>Total invertido:</strong> ${{ totalInversion.toLocaleString('es-CO') }}</p>
-            <p><strong>Ganancia total obtenida:</strong>${{ totalGanancia.toLocaleString('es-CO') }}</p>
-            <p><strong>Capital total:</strong> ${{  totalCapital.toLocaleString('es-CO') }}</p>
-        </div>
+            <div class="my-3 col-md-11 mx-auto card card-body shadow border">
+                <h5>Resumen financiero</h5>
+                <p><strong>Total invertido:</strong> ${{ totalInversion.toLocaleString('es-CO') }}</p>
+                <p><strong>Ganancia total obtenida:</strong>${{ totalGanancia.toLocaleString('es-CO') }}</p>
+                <p><strong>Capital total:</strong> ${{ totalCapital.toLocaleString('es-CO') }}</p>
+            </div>
         </div>
 
         <button class="button_action" @click.prevent="openModal()"></button>
@@ -242,6 +241,8 @@ body {
         </div>
 
         <DetailMovements ref="ModalDetail" @confirm="handleConfirm" />
+        <DetailMedicines ref="ModalDetailMedicines" @confirm="handleConfirm" />
+        
         <CardFoor :props="card"></CardFoor>
 
         <main class="py-4">
@@ -259,11 +260,14 @@ body {
 import Progress from "../General/Progress.vue";
 import CardFoor from "../General/CardFoor.vue";
 import DetailMovements from './components/DetailMovements.vue';
+import DetailMedicines from './components/DetailMedicines.vue'
 export default {
     components: {
         Progress,
         CardFoor,
-        DetailMovements
+        DetailMovements,
+        DetailMedicines
+        
     },
 
     data() {
@@ -334,7 +338,7 @@ export default {
                     'profit_obtained': 'ganancia obtenida',
                     'retiro': 'finaliza',
                     'pago': 'registrar pago',
-                    
+
 
                 }
             },
@@ -360,15 +364,21 @@ export default {
         getToken() {
             console.log(localStorage.getItem('access_token'), 'getToken')
         },
-        openModal() {
-            this.$refs.ModalDetail.open();
+        openModal(refName = 'ModalDetail') {
+            //this.$refs.ModalDetail.open();
+            const modal = this.$refs[refName];
+            if (modal && typeof modal.open === 'function') {
+                modal.open();
+            } else {
+                console.error(`No se encontró el modal o no tiene un método "open": ${refName}`);
+            }
         },
-          handleConfirm() {
+        handleConfirm() {
             // lógica cuando el modal se confirma
         },
 
-        savePago(id,value) {
-                console.log("pago",{value,id})
+        savePago(id, value) {
+            console.log("pago", { value, id })
             if (!value || isNaN(value)) {
                 this.$swal({
                     icon: 'error',
@@ -381,7 +391,7 @@ export default {
                 investment_id: id,
                 value: value
             };
-    
+
             axios.post("/api/finance/savePago", data_save)
                 .then(res => {
                     this.$swal({
@@ -399,6 +409,59 @@ export default {
                     });
                 });
         },
+         openModalWithMovement(id) {
+            // Llama la API para obtener detalles del movimiento
+            axios.post('/api/finance/getPagosByInvestment', { investment_id: id })
+                .then(res => {
+                     if (res.data.transaction.status) {
+                        this.$refs.ModalDetail.setData(res.data.data)
+                        this.$refs.ModalDetail.open()
+                    } else {
+                        this.$swal({
+                            icon: 'error',
+                            text: 'No se pueden cargar movimientos',
+
+                        });
+                    }
+
+                   // this.$refs.ModalDetail.setData(res.data.data); // Asegúrate que setData esté en el modal
+                    this.$refs.ModalDetail.open();
+                })
+                .catch(err => {
+                    this.$swal({
+                        icon: 'error',
+                        text: 'No se pudo cargar el detalle....',
+                    });
+                     this.$refs.ModalDetail.open();
+                    console.log(err)
+                });
+            },
+            openModalWithMedicines(id) {
+            // Llama la API para obtener detalles del movimiento
+            axios.post('/api/medic/getByMedicines', { medicine_id: id })
+                .then(res => {
+                     if (res.data.transaction.status) {
+                        this.$refs.ModalDetailMedicines.setData(res.data.data)
+                        this.$refs.ModalDetailMedicines.open()
+                    } else {
+                        this.$swal({
+                            icon: 'error',
+                            text: 'No se pueden cargar movimientos',
+
+                        });
+                    }
+                })
+                .catch(err => {
+                     this.$refs.ModalDetailMedicines.open()
+                    this.$swal({
+                        icon: 'error',
+                        text: 'No se pudo cargar el detalle....',
+                    });
+                    // this.$refs.ModalDetail.open();
+                    console.log(err)
+                });
+            },
+
 
         getInvestments() {
             axios.post("/api/finance/getInvestments")
@@ -480,20 +543,20 @@ export default {
             let totalCapital = 0;
 
             this.rowsFinance.forEach(item => {
-            const cleanValor = Number(
-                String(item.valor).replace(/[$.\s']/g, '')
-            ) || 0;
+                const cleanValor = Number(
+                    String(item.valor).replace(/[$.\s']/g, '')
+                ) || 0;
 
-            const cleanGanancia = Number(
-                String(item.profit_obtained).replace(/[$.\s']/g, '')
-            ) || 0;
-            console.log(cleanGanancia)
-            totalInversion += cleanValor;
-            totalGanancia += cleanGanancia;
+                const cleanGanancia = Number(
+                    String(item.profit_obtained).replace(/[$.\s']/g, '')
+                ) || 0;
+                console.log(cleanGanancia)
+                totalInversion += cleanValor;
+                totalGanancia += cleanGanancia;
             });
-            this.totalGanancia  = totalGanancia;
+            this.totalGanancia = totalGanancia;
             this.totalInversion = totalInversion;
-            this.totalCapital  =  totalInversion + totalGanancia;
+            this.totalCapital = totalInversion + totalGanancia;
         },
         getProgress() {
             var data_save = {

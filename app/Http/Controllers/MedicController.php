@@ -6,6 +6,7 @@ use App\Http\Helpers\Handler;
 use Illuminate\Http\Request;
 use App\Http\Traits\Sp;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class MedicController extends Controller
@@ -77,6 +78,41 @@ class MedicController extends Controller
 
     public function search(Request $request){
         dd( date( 'Y-m-d', strtotime($request->date) ) );
+
+    }
+
+    public function getByMedicines(Request $request){
+                $validated = $request->validate([
+                'medicine_id' => 'required'
+        ]);
+
+        // Obtener los pagos asociados
+        $history = DB::table('log_medicines')
+            ->join('medicines', 'log_medicines.medicine_id', '=', 'medicines.id')
+            ->join('medicines_types', 'medicines.medicines_types_id', '=', 'medicines_types.id')
+            ->where('log_medicines.medicine_id', $request->medicine_id)
+            ->where('log_medicines.user_id', Auth::id())
+            ->orderByDesc('log_medicines.created_at')
+            ->get([
+                'log_medicines.id',
+                'log_medicines.created_at',
+                'medicines.name as medicine_name',
+                'medicines_types.name as type_name',
+                'medicines.interval_days'
+            ]);
+
+            foreach($history as $item){
+                $carbonDate = Carbon::parse($item->created_at)->locale('es');
+                $item->dia_semana = ucfirst($carbonDate->translatedFormat('l'));
+                $data[] = $item;
+                $tipo = $item->type_name;
+            }
+            $data = [
+                'items'=> $data,
+                'tipo'=> $tipo
+            ];
+
+            return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Done'],$data );
 
     }
 

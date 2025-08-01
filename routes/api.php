@@ -24,8 +24,10 @@ Route::middleware([/*'auth:api'*/  'auth:api'])->group(function () {
     Route::post('/general/progress_bar', [\App\Http\Controllers\MedicController::class, 'getProgressBar']);
     Route::post('/medic/save_log', [\App\Http\Controllers\MedicController::class, 'saveLog']);
     Route::post('/medic/search', [\App\Http\Controllers\MedicController::class, 'search']);
+    Route::post('/medic/getByMedicines', [\App\Http\Controllers\MedicController::class, 'getByMedicines']);
     Route::post('finance/getInvestments', [\App\Http\Controllers\FinanceController::class, 'getInvestments']);
     Route::post('finance/savePago', [\App\Http\Controllers\FinanceController::class, 'savePago']);
+    Route::post('finance/getPagosByInvestment', [\App\Http\Controllers\FinanceController::class, 'getPagosByInvestment']);
 
 
     /* permisions */
