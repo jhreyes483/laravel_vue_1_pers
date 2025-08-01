@@ -6,6 +6,7 @@ use App\Http\Traits\Sp;
 use Illuminate\Http\Request;
 use App\Models\InvestmentPayment;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class FinanceController extends Controller
 {
@@ -51,6 +52,7 @@ class FinanceController extends Controller
         ]);
 
         // Obtener los pagos asociados
+        /*
         $pagos = InvestmentPayment::where('investment_id', $request->investment_id)
             ->orderByDesc('created_at')
             ->get([
@@ -59,13 +61,46 @@ class FinanceController extends Controller
                 'status',
                 'created_at'
             ]);
+          */
+            $pagos = DB::table('investment_payments')
+            ->join('investments', 'investment_payments.investment_id', '=', 'investments.id')
+            ->join('investments_types', 'investments.investment_type_id', '=', 'investments_types.id')
+            ->where('investment_payments.investment_id', $request->investment_id)
+            ->orderByDesc('investment_payments.created_at')
+            ->get([
+                'investment_payments.id',
+                'investment_payments.current_profit as value',
+                'investment_payments.status',
+                'investments.entity',
+                'investment_payments.created_at',
+                'investments.name as investment_name',
+                'investments_types.name as type_name',
+
+            ]);  
+
+            foreach ($pagos as $key => $item) {
+                if($key == 0){
+                    $investment['name']      = $item->investment_name;
+                    $investment['type_name'] = $item->type_name; 
+                    $investment['entity']    = $item->entity;
+                    break;
+                }
+                
+            }
+            
+            $data = [
+                'pagos' => $pagos->toArray(),
+                'investment' =>$investment
+            ];
+
+            
        
 
         // Devolver respuesta estructurada
         return $this->responseApi->response(true, [
             'type'    => 'success',
             'content' => 'Pagos obtenidos correctamente.'
-        ], $pagos->toArray());
+        ], $data);
     }
 
 

@@ -3,7 +3,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Detalle de {{ tipo }}</h5>
+                    <h5 class="modal-title">Detalle de {{ tipo +" "+ name }} </h5>
                     <button type="button" class="btn-close" @click="close()" aria-label="Close"></button>
                 </div>
 
@@ -50,6 +50,7 @@ export default {
         return {
             items: [],
             tipo: '',
+            name: '',
             modalInstance: null
         };
     },
@@ -57,6 +58,7 @@ export default {
         setData(data) {
             this.items = data.items || [];
             this.tipo = data.tipo || '';
+            this.name = data.name || '';
         },
         formatDate(fecha) {
             const options = {

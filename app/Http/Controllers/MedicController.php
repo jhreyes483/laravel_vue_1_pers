@@ -105,11 +105,13 @@ class MedicController extends Controller
                 $carbonDate = Carbon::parse($item->created_at)->locale('es');
                 $item->dia_semana = ucfirst($carbonDate->translatedFormat('l'));
                 $data[] = $item;
-                $tipo = $item->type_name;
+                $tipo   = $item->type_name;
+                $name   = $item->medicine_name;
             }
             $data = [
                 'items'=> $data,
-                'tipo'=> $tipo
+                'tipo'=> $tipo,
+                'name'=> $name
             ];
 
             return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Done'],$data );
@@ -200,7 +202,7 @@ class MedicController extends Controller
             $date = $currentDateTime->toDateString().' '.$currentDateTime->toTimeString();
         }
         $params =  ['p_medicine_id' =>  $request->medicine_id, 'p_user_id' => 1, 'p_date' => $date ];
-        
+
         $save   = $this->execSP( 'lsp_save_log', $params );
         return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Done'], ['msg'=> $save['data'][0]]);
 

@@ -3,11 +3,22 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Detalle de movimientos</h5>
+                    <h5 class="modal-title">Detalle de movimientos:</h5> <br>
                     <button type="button" class="btn-close" @click="close()" aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body">
+                    <div class="mb-3">
+                        <span>
+                            <b>Tipo: </b> {{ investment.type_name }} <br>
+                        </span>
+                        <span>
+                            <b>Descripción:</b> {{ investment.name }} <br>
+                        </span>
+                        <span>
+                            <b>Entidad:</b> {{ investment.entity }} <br>
+                        </span>
+                    </div>
                     <div class="table-responsive">
                         <table v-if="pagos.length" class="table table-sm table-striped">
                             <thead>
@@ -60,6 +71,7 @@ export default {
     data() {
         return {
             pagos: [],
+            investment: [],
             modalInstance: null
         };
     },
@@ -69,8 +81,9 @@ export default {
         }
     },
     methods: {
-        setData(pagos) {
-            this.pagos = pagos
+        setData(data) {
+            this.pagos = data.pagos
+            this.investment = data.investment
         },
         formatPesos(valor) {
             return new Intl.NumberFormat('es-CO', {
