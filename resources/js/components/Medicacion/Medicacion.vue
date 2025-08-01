@@ -88,9 +88,10 @@ body {
 
 
         <div class="container">
-            <div class="col-8 mx-auto row">
-                <div class="col-5 row mx-auto my-4 mx-auto card card shadow">
-                    <div class="my-4">
+            <div class="row justify-content-center">
+                <!-- 
+                <div class="col-12 col-md-5 mx-2 my-3 card shadow">
+                    <div class="my-4 card-body">
                         <label for="">Guardar toma </label>
                         <v-select v-model.trim="medicine_id" :options="medicines" :reduce="item => item.id" label="name"
                             placeholder="Selecciona medicina">
@@ -101,13 +102,16 @@ body {
                     </div>
 
 
-                    <div class=" text-center my-3 ">
+                    <div class=" text-center my-3 mb-5">
                         <input type="button" value="guardar" class="btn btn-primary col-10" @click="saveLog()">
                     </div>
                 </div>
+                
+                -->
+  
 
-                <div class="col-5 row mx-auto my-4  mx-auto card card shadow">
-                    <div class="my-4">
+                <div class="col-12 col-md-4 mx-2 my-3 card shadow">
+                    <div class="my-4 card-body">
                         <label for="">Buscar agenda por fecha</label>
                         <!--
                                 :value-zone="57" :zone="57"
@@ -125,7 +129,7 @@ body {
                     </div>
 
 
-                    <div class=" text-center my-3 ">
+                    <div class=" text-center my-3 mb-5">
                         <input type="button" value="Buscar" class="btn btn-primary col-10" @click="sendSearch()">
                     </div>
                 </div>
@@ -141,7 +145,7 @@ body {
             </div>
         </div>
 
-        <div class="col-md-12 my-8 table table-striped my-4 col-md-11 mx-auto card card-body  shadow border">
+        <div class="col-md-12 my-8 table table-striped my-4 mx-auto card card-body  shadow border">
             <v-client-table ref="worehouse_table" :columns="columns" :data="rows" :options="options_table">
                 <template slot="ya_tome" slot-scope="props">
                     <span v-if="props.row.ya_tome == 0">
@@ -171,7 +175,7 @@ body {
             </v-client-table>
         </div>
 
-        <div class="col-md-12 my-8 table table-striped my-4 col-md-11 mx-auto card card-body  shadow border">
+        <div class="col-md-12 my-8 table table-striped my-4 mx-auto card card-body  shadow border">
             <v-client-table ref="worehouse_table" :columns="columnsFinance" :data="rowsFinance"
                 :options="options_table">
                 <template slot="days_restantes" slot-scope="props">
@@ -221,12 +225,16 @@ body {
 
 
             </v-client-table>
-            <div class="my-3 col-md-11 mx-auto card card-body shadow border">
+            
+            <div class="row justify-content-center">
+            <div class="col-12 col-md-8 mx-2 my-3 card shadow">
                 <h5>Resumen financiero</h5>
                 <p><strong>Total invertido:</strong> ${{ totalInversion.toLocaleString('es-CO') }}</p>
-                <p><strong>Ganancia total obtenida:</strong>${{ totalGanancia.toLocaleString('es-CO') }}</p>
+                <p><strong>Ganancia total obtenida:</strong> ${{ totalGanancia.toLocaleString('es-CO') }}</p>
                 <p><strong>Capital total:</strong> ${{ totalCapital.toLocaleString('es-CO') }}</p>
             </div>
+            </div>
+
         </div>
 
         <button class="button_action" @click.prevent="openModal()"></button>
@@ -543,13 +551,21 @@ export default {
             let totalCapital = 0;
 
             this.rowsFinance.forEach(item => {
-                const cleanValor = Number(
-                    String(item.valor).replace(/[$.\s']/g, '')
-                ) || 0;
+   let valor = item.valor;
+        let ganancia = item.profit_obtained;
 
-                const cleanGanancia = Number(
-                    String(item.profit_obtained).replace(/[$.\s']/g, '')
-                ) || 0;
+        // Si viene como string, limpia los caracteres especiales
+        if (typeof valor === 'string') {
+            valor = valor.replace(/[^0-9]/g, '');
+        }
+
+        if (typeof ganancia === 'string') {
+            ganancia = ganancia.replace(/[^0-9]/g, '');
+        }
+
+        // Asegúrate de convertirlos a número
+        const cleanValor = Number(valor) || 0;
+        const cleanGanancia = Number(ganancia) || 0;
                 console.log(cleanGanancia)
                 totalInversion += cleanValor;
                 totalGanancia += cleanGanancia;

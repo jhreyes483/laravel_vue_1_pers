@@ -8,27 +8,29 @@
                 </div>
 
                 <div class="modal-body">
-                    <table v-if="items.length" class="table table-sm table-striped">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Fecha</th>
-                                <th>Día</th>
-                                <th>Intervalo (días)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="item in items" :key="item.id">
-                                <td>{{ item.id }}</td>
-                                <td>{{ item.medicine_name }}</td>
-                                <td>{{ formatDate(item.created_at) }}</td>
-                                <td>{{ item.dia_semana }}</td>
-                                <td>{{ item.interval_days }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div v-else class="text-muted">No hay registros disponibles.</div>
+                    <div class="table-responsive">
+                        <table v-if="items.length" class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Fecha</th>
+                                    <th>Día</th>
+                                    <th>Intervalo (días)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in items" :key="item.id">
+                                    <td>{{ item.id }}</td>
+                                    <td>{{ item.medicine_name }}</td>
+                                    <td>{{ formatDate(item.created_at) }}</td>
+                                    <td>{{ item.dia_semana }}</td>
+                                    <td>{{ item.interval_days }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div v-else class="text-muted">No hay registros disponibles.</div>
+                    </div>
                 </div>
 
                 <div class="modal-footer">

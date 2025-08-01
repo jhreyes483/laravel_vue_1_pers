@@ -8,38 +8,39 @@
                 </div>
 
                 <div class="modal-body">
-                    <table v-if="pagos.length" class="table table-sm table-striped">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Valor</th>
-                                <th>Fecha</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="pago in pagos" :key="pago.id">
-                                <td>{{ pago.id }}</td>
-                                <td>{{ formatPesos(pago.value) }}</td>
-                                <td>{{ formatDate(pago.created_at) }}</td>
-                                <td>
-                                    <span class="badge" :class="pago.status == 1 ? 'bg-success' : 'bg-secondary'">
-                                        {{ pago.status == 1 ? 'Activo' : 'Inactivo' }}
-                                    </span>
-                                </td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr class="fw-bold">
-                                <td colspan="1">Total</td>
-                                <td>{{ formatPesos(totalPagos) }}</td>
-                                <td colspan="2"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                    <div v-else class="text-muted">No hay pagos registrados.</div>
+                    <div class="table-responsive">
+                        <table v-if="pagos.length" class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Valor</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="pago in pagos" :key="pago.id">
+                                    <td>{{ pago.id }}</td>
+                                    <td>{{ formatPesos(pago.value) }}</td>
+                                    <td>{{ formatDate(pago.created_at) }}</td>
+                                    <td>
+                                        <span class="badge" :class="pago.status == 1 ? 'bg-success' : 'bg-secondary'">
+                                            {{ pago.status == 1 ? 'Activo' : 'Inactivo' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="fw-bold">
+                                    <td colspan="1">Total</td>
+                                    <td>{{ formatPesos(totalPagos) }}</td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <div v-else class="text-muted">No hay pagos registrados.</div>
+                    </div>
                 </div>
-
                 <div class="modal-footer">
                     <button class="btn btn-secondary" @click="close()">Cerrar</button>
                     <!-- 

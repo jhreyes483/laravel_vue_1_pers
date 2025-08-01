@@ -197,11 +197,11 @@ class MedicController extends Controller
         if( isset( $request->date)  ){
          $date =   Carbon::parse($request->date)->toDateString().' '.$currentDateTime->toTimeString();
         }else{
-            $date = $currentDateTime->toDateString();
+            $date = $currentDateTime->toDateString().' '.$currentDateTime->toTimeString();
         }
-        $params =  ['p_medicine_id' =>  $request->medicine_id, 'p_user_id' => 1, 'p_date' => $date ] ;
-
-        $save = $this->execSP( 'lsp_save_log', $params );
+        $params =  ['p_medicine_id' =>  $request->medicine_id, 'p_user_id' => 1, 'p_date' => $date ];
+        
+        $save   = $this->execSP( 'lsp_save_log', $params );
         return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Done'], ['msg'=> $save['data'][0]]);
 
 

@@ -34,4 +34,7 @@ COMMMITS
 "se genera ejemplo de uso de permiso preteccion de rutas con permiso nuevo y asignado tabla permission"
 "EJEMPLO DE SELECT MULTIPLE CON VALORES POR DEFAULT"
 
+Lebantar server desde en red local
+php artisan serve --host=0.0.0.0 --port=8000
+
 
