@@ -81,6 +81,38 @@ class MedicController extends Controller
 
     }
 
+    public function getNumberOfShotsPerDay(Request $request){
+        $validated = $request->validate([
+            'medicine_id' => 'required'
+        ]);
+
+        $fechaHoy = Carbon::today(); 
+        $cantidadLogsHoy = DB::table('log_medicines')
+        ->where('medicine_id', $request->medicine_id)
+        ->where('user_id', Auth::id())
+        ->whereDate('created_at', $fechaHoy)
+        ->count();
+
+        $recipe = DB::table('hours_per_dose')
+            ->join('user_medicines', 'hours_per_dose.user_medicines_id', '=', 'user_medicines.id')
+            ->join('medicines', 'user_medicines.medicine_id', '=', 'medicines.id')
+            ->where('user_medicines.medicine_id', $request->medicine_id)
+            ->where('user_medicines.user_id', Auth::id())
+            ->orderByDesc('user_medicines.id')
+            ->get([
+                'medicines.id',
+                'medicines.name as medicine_name',
+                'user_medicines.several_per_day',
+                'hours_per_dose.hour'
+            ]);
+
+            $data =[
+                'receta' => $recipe,
+                'cantidad_tomas_hoy' => $cantidadLogsHoy
+            ];
+            return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Done'],$data );
+    }
+
     public function getByMedicines(Request $request){
                 $validated = $request->validate([
                 'medicine_id' => 'required'

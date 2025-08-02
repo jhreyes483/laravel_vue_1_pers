@@ -98,17 +98,17 @@ body {
                             <template slot="no-options">
                                 Seleccione medicina a registrar
                             </template>
-                        </v-select>
-                    </div>
+</v-select>
+</div>
 
 
-                    <div class=" text-center my-3 mb-5">
-                        <input type="button" value="guardar" class="btn btn-primary col-10" @click="saveLog()">
-                    </div>
-                </div>
-                
-                -->
-  
+<div class=" text-center my-3 mb-5">
+    <input type="button" value="guardar" class="btn btn-primary col-10" @click="saveLog()">
+</div>
+</div>
+
+-->
+
 
                 <div class="col-12 col-md-4 mx-2 my-3 card shadow">
                     <div class="my-4 card-body">
@@ -165,10 +165,13 @@ body {
                     }" class="btn btn-circle" data-bs-toggle="tooltip" data-bs-placement="right" title="Regitrar">
                         <i class="fa fa-check" aria-hidden="true"></i>
                     </button>
-                    <button  
-                    @click="openModalWithMedicines(props.row.medicine_id)" class="btn btn-circle btn-primary"
+                    <button @click="openModalWithMedicines(props.row.medicine_id)" class="btn btn-circle btn-primary"
                         title="Ver detalles">
                         <i class="fa fa-eye" aria-hidden="true"></i>
+                    </button>
+                    <button v-if="props.row.several_per_day > 0" @click="getNumberOfShotsPerDay(props.row.medicine_id)"
+                        class="btn btn-circle btn-success" title="Mas de una toma en un día">
+                        <i class="fa fa-sticky-note" aria-hidden="true"></i>
                     </button>
                 </template>
 
@@ -225,14 +228,14 @@ body {
 
 
             </v-client-table>
-            
+
             <div class="row justify-content-center">
-            <div class="col-12 col-md-8 mx-2 my-3 card shadow">
-                <h5>Resumen financiero</h5>
-                <p><strong>Total invertido:</strong> ${{ totalInversion.toLocaleString('es-CO') }}</p>
-                <p><strong>Ganancia total obtenida:</strong> ${{ totalGanancia.toLocaleString('es-CO') }}</p>
-                <p><strong>Capital total:</strong> ${{ totalCapital.toLocaleString('es-CO') }}</p>
-            </div>
+                <div class="col-12 col-md-8 mx-2 my-3 card shadow">
+                    <h5>Resumen financiero</h5>
+                    <p><strong>Total invertido:</strong> ${{ totalInversion.toLocaleString('es-CO') }}</p>
+                    <p><strong>Ganancia total obtenida:</strong> ${{ totalGanancia.toLocaleString('es-CO') }}</p>
+                    <p><strong>Capital total:</strong> ${{ totalCapital.toLocaleString('es-CO') }}</p>
+                </div>
             </div>
 
         </div>
@@ -250,7 +253,8 @@ body {
 
         <DetailMovements ref="ModalDetail" @confirm="handleConfirm" />
         <DetailMedicines ref="ModalDetailMedicines" @confirm="handleConfirm" />
-        
+        <DetailLeafMedicines ref="ModalDetailLeafMedicines" @confirm="handleConfirm" />
+
         <CardFoor :props="card"></CardFoor>
 
         <main class="py-4">
@@ -269,13 +273,15 @@ import Progress from "../General/Progress.vue";
 import CardFoor from "../General/CardFoor.vue";
 import DetailMovements from './components/DetailMovements.vue';
 import DetailMedicines from './components/DetailMedicines.vue'
+import DetailLeafMedicines from './components/DetailLeafMedicines.vue';
 export default {
     components: {
         Progress,
         CardFoor,
         DetailMovements,
-        DetailMedicines
-        
+        DetailMedicines,
+        DetailLeafMedicines
+
     },
 
     data() {
@@ -381,6 +387,7 @@ export default {
                 console.error(`No se encontró el modal o no tiene un método "open": ${refName}`);
             }
         },
+        openLeafDetails(){},
         handleConfirm() {
             // lógica cuando el modal se confirma
         },
@@ -417,11 +424,11 @@ export default {
                     });
                 });
         },
-         openModalWithMovement(id) {
+        openModalWithMovement(id) {
             // Llama la API para obtener detalles del movimiento
             axios.post('/api/finance/getPagosByInvestment', { investment_id: id })
                 .then(res => {
-                     if (res.data.transaction.status) {
+                    if (res.data.transaction.status) {
                         this.$refs.ModalDetail.setData(res.data.data)
                         this.$refs.ModalDetail.open()
                     } else {
@@ -432,7 +439,7 @@ export default {
                         });
                     }
 
-                   // this.$refs.ModalDetail.setData(res.data.data); // Asegúrate que setData esté en el modal
+                    // this.$refs.ModalDetail.setData(res.data.data); // Asegúrate que setData esté en el modal
                     this.$refs.ModalDetail.open();
                 })
                 .catch(err => {
@@ -440,15 +447,15 @@ export default {
                         icon: 'error',
                         text: 'No se pudo cargar el detalle....',
                     });
-                     this.$refs.ModalDetail.open();
+                    this.$refs.ModalDetail.open();
                     console.log(err)
                 });
-            },
-            openModalWithMedicines(id) {
+        },
+        openModalWithMedicines(id) {
             // Llama la API para obtener detalles del movimiento
             axios.post('/api/medic/getByMedicines', { medicine_id: id })
                 .then(res => {
-                     if (res.data.transaction.status) {
+                    if (res.data.transaction.status) {
                         this.$refs.ModalDetailMedicines.setData(res.data.data)
                         this.$refs.ModalDetailMedicines.open()
                     } else {
@@ -460,7 +467,7 @@ export default {
                     }
                 })
                 .catch(err => {
-                     this.$refs.ModalDetailMedicines.open()
+                    this.$refs.ModalDetailMedicines.open()
                     this.$swal({
                         icon: 'error',
                         text: 'No se pudo cargar el detalle....',
@@ -468,9 +475,31 @@ export default {
                     // this.$refs.ModalDetail.open();
                     console.log(err)
                 });
-            },
+        },
+        getNumberOfShotsPerDay(id){
+            axios.post('/api/medic/getNumberOfShotsPerDay', { medicine_id: id })
+                .then(res => {
+                    if (res.data.transaction.status) {
+                        this.$refs.ModalDetailLeafMedicines.setData(res.data.data)
+                        this.$refs.ModalDetailLeafMedicines.open()
+                    } else {
+                        this.$swal({
+                            icon: 'error',
+                            text: 'No se pueden cargar movimientos',
 
-
+                        });
+                    }
+                })
+                .catch(err => {
+                    this.$refs.ModalDetailLeafMedicine.open()
+                    this.$swal({
+                        icon: 'error',
+                        text: 'No se pudo cargar el detalle....',
+                    });
+                    // this.$refs.ModalDetail.open();
+                    console.log(err)
+                });
+        },
         getInvestments() {
             axios.post("/api/finance/getInvestments")
                 //post('/api/times_zones/getComplement',{time_zone_id:this.wr.time_zone_id})
@@ -551,21 +580,21 @@ export default {
             let totalCapital = 0;
 
             this.rowsFinance.forEach(item => {
-   let valor = item.valor;
-        let ganancia = item.profit_obtained;
+                let valor = item.valor;
+                let ganancia = item.profit_obtained;
 
-        // Si viene como string, limpia los caracteres especiales
-        if (typeof valor === 'string') {
-            valor = valor.replace(/[^0-9]/g, '');
-        }
+                // Si viene como string, limpia los caracteres especiales
+                if (typeof valor === 'string') {
+                    valor = valor.replace(/[^0-9]/g, '');
+                }
 
-        if (typeof ganancia === 'string') {
-            ganancia = ganancia.replace(/[^0-9]/g, '');
-        }
+                if (typeof ganancia === 'string') {
+                    ganancia = ganancia.replace(/[^0-9]/g, '');
+                }
 
-        // Asegúrate de convertirlos a número
-        const cleanValor = Number(valor) || 0;
-        const cleanGanancia = Number(ganancia) || 0;
+                // Asegúrate de convertirlos a número
+                const cleanValor = Number(valor) || 0;
+                const cleanGanancia = Number(ganancia) || 0;
                 console.log(cleanGanancia)
                 totalInversion += cleanValor;
                 totalGanancia += cleanGanancia;
