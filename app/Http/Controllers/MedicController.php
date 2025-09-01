@@ -225,6 +225,56 @@ class MedicController extends Controller
         ];
     }
 
+    public function saveLogAllDay(Request $request){
+
+        $dateSearch= ( isset( $request->date) ? Carbon::parse($request->date)->toDateString() : Carbon::now('America/Bogota')->toDateTimeString() );
+        $params = [
+            'p_user_id'      => 1,
+             'p_data_serach' => $dateSearch
+            ];
+        $all = $this->execSP('lsp_get_earrings' ,$params);
+
+        $nSeveralPerDay = 0;
+        foreach($all['data'] as $medicine){
+            if($medicine->ya_tome == 0){
+
+                $nSeveralPerDay = $medicine->several_per_day > $nSeveralPerDay ? $medicine->several_per_day : $nSeveralPerDay;
+                $params = [
+                    'p_medicine_id' => $medicine->medicine_id,
+                     'p_user_id'    => Auth::id(), 
+                     'p_date'       => $dateSearch
+                    ];
+                    $save = $this->execSP('lsp_save_log', $params);
+            }
+        }
+
+        // Marca las tomas que tiene mas de una en un dia
+        $nSeveralPerDay = $nSeveralPerDay -1;
+        if($nSeveralPerDay > 0){
+            for ($i=1; $i < $nSeveralPerDay; $i++) { 
+                $params    = [
+                    'p_user_id'      =>1,
+                     'p_data_serach' => $dateSearch
+                    ];
+                 $all      = $this->execSP('lsp_get_earrings' ,$params);
+                if(isset($all['data']) && count($all['data'])){
+                    foreach($all['data'] as $medicine){
+                        if($medicine->ya_tome == 0){
+                            $nSeveralPerDay = $medicine->several_per_day > $nSeveralPerDay ? $medicine->several_per_day : $nSeveralPerDay;
+                            $params =  [
+                                'p_medicine_id'=> $medicine->medicine_id,
+                                'p_user_id'    => Auth::id(), 
+                                'p_date'       => $dateSearch
+                            ];
+                            $save   = $this->execSP( 'lsp_save_log', $params );
+                        }
+                    }  
+                }
+            } 
+        }
+        
+        return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Done'], ['msg'=> $save['data'][0]]);
+    }
 
     public function saveLog(Request $request){
         $currentDateTime = Carbon::now('America/Bogota');
@@ -233,7 +283,7 @@ class MedicController extends Controller
         }else{
             $date = $currentDateTime->toDateString().' '.$currentDateTime->toTimeString();
         }
-        $params =  ['p_medicine_id' =>  $request->medicine_id, 'p_user_id' => 1, 'p_date' => $date ];
+        $params =  ['p_medicine_id' =>  $request->medicine_id, 'p_user_id' => Auth::id(), 'p_date' => $date ];
 
         $save   = $this->execSP( 'lsp_save_log', $params );
         return $this->responseApi->response(true, ['type' => 'success', 'content' => 'Done'], ['msg'=> $save['data'][0]]);

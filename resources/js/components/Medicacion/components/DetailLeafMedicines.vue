@@ -9,7 +9,7 @@
 
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        Ya has registrado <strong>{{ cantidadTomasHoy }}</strong> de <strong>{{ severalPerDay }}</strong> tomas hoy.
+                        Ya has registrado <strong>{{ cantidadTomasHoy }}</strong> de <strong>{{ severalPerDay }}</strong> tareas hoy.
                     </div>
 
                     <div class="table-responsive">
@@ -22,7 +22,7 @@
                             </thead>
                             <tbody>
                                 <tr v-for="(item, index) in receta" :key="index">
-                                    <td>{{ item.hour }}</td>
+                                    <td>{{ formatHour(item.hour)  }}</td>
                                     <td>{{ item.medicine_name }}</td>
                                 </tr>
                             </tbody>
@@ -53,6 +53,13 @@ export default {
         };
     },
     methods: {
+        formatHour(hourString) {
+            const [hour, minute] = hourString.split(':').map(Number);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            let formattedHour = hour % 12 || 12; // 0 -> 12, 13 -> 1, etc.
+            return `${formattedHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${ampm}`;
+        },
+
         setData(data) {
             this.receta = data.receta || [];
             this.cantidadTomasHoy = data.cantidad_tomas_hoy || 0;

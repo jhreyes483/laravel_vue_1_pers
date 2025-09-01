@@ -129,8 +129,14 @@ body {
                     </div>
 
 
-                    <div class=" text-center my-3 mb-5">
-                        <input type="button" value="Buscar" class="btn btn-primary col-10" @click="sendSearch()">
+                    <div class=" text-center my-3 mb-5 row">
+                        <div class="col-md-6">
+                            <input type="button" value="Buscar" class="btn btn-primary col-10" @click="sendSearch()">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="button" value="Todos" class="btn btn-warning col-10" @click="saveLogAllDay()">
+                        </div>
+                        
                     </div>
                 </div>
 
@@ -170,7 +176,12 @@ body {
                         <i class="fa fa-eye" aria-hidden="true"></i>
                     </button>
                     <button v-if="props.row.several_per_day > 0" @click="getNumberOfShotsPerDay(props.row.medicine_id)"
-                        class="btn btn-circle btn-success" title="Mas de una toma en un día">
+                        v-bind:class="{
+                            'btn-dark': props.row.ya_tome,
+                            'btn-success': !props.row.ya_tome
+                        }"
+                        
+                        class="btn btn-circle" title="Mas de una toma en un día">
                         <i class="fa fa-sticky-note" aria-hidden="true"></i>
                     </button>
                 </template>
@@ -537,6 +548,40 @@ export default {
 
             //date = new Date( this.final_date );
             // this.final_date = date.toISOString().substring(0, 10);
+        },
+
+        saveLogAllDay(id = false, ya_tome = false) {
+
+            if (id && ya_tome) {
+                this.$swal({
+                    icon: 'error',
+                    text: 'Ya habia registrado.',
+                });
+                return false;
+            }
+
+
+            var data_save = {
+                date: (this.final_date ? this.final_date : null)
+            }
+
+            axios.post("/api/medic/save_log_all_day", data_save)
+                .then(res => {
+
+                    this.$swal({
+                        icon: 'success',
+                        text: 'Guardo correctamente.',
+                    });
+                    this.medicine_id = null
+                    this.getProgress()
+                    this.getComplements()
+
+                }).catch(err => {
+                    this.$swal({
+                        icon: 'danger',
+                        text: 'Error al registrar',
+                    });
+                })
         },
 
         saveLog(id = false, ya_tome = false) {
