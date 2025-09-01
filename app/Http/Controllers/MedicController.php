@@ -24,7 +24,7 @@ class MedicController extends Controller
         try {
             // id autenticado Auth::id()
             $dateSearch= ( isset( $request->date) ? Carbon::parse($request->date)->toDateString() : Carbon::now('America/Bogota')->toDateTimeString() );
-            $params   = ['p_user_id'=>1, 'p_data_serach' => $dateSearch];
+            $params   = ['p_user_id'=>Auth::id(), 'p_data_serach' => $dateSearch];
             $all      = $this->execSP('lsp_get_earrings' ,$params);
             $dispo    = $this->execSP('lsp_get_available', []);
             $clean    = $this->execSP('lsp_limpiar_log_medicines', []);
@@ -183,7 +183,7 @@ class MedicController extends Controller
     }
 
     public function getProgressBar(){
-        $params        =  ['p_user_id'=>1];
+        $params        =  ['p_user_id'=>Auth::id()];
         $progressBar   = $this->execSP('lsp_get_progress__bar_lv1' ,$params);
         // validateResultSql($response, $emails, $from, $format = 0)
         $progressBar   = Handler::validateResultSql($progressBar, [], 'lsp_get_progress__bar_lv1' );
@@ -229,7 +229,7 @@ class MedicController extends Controller
 
         $dateSearch= ( isset( $request->date) ? Carbon::parse($request->date)->toDateString() : Carbon::now('America/Bogota')->toDateTimeString() );
         $params = [
-            'p_user_id'      => 1,
+            'p_user_id'      => Auth::id(),
              'p_data_serach' => $dateSearch
             ];
         $all = $this->execSP('lsp_get_earrings' ,$params);
@@ -253,20 +253,20 @@ class MedicController extends Controller
         if($nSeveralPerDay > 0){
             for ($i=1; $i < $nSeveralPerDay; $i++) { 
                 $params    = [
-                    'p_user_id'      =>1,
+                    'p_user_id'      =>Auth::id(),
                      'p_data_serach' => $dateSearch
                     ];
-                 $all      = $this->execSP('lsp_get_earrings' ,$params);
+                 $all      = $this->execSP('lsp_get_earrings', $params);
                 if(isset($all['data']) && count($all['data'])){
                     foreach($all['data'] as $medicine){
                         if($medicine->ya_tome == 0){
                             $nSeveralPerDay = $medicine->several_per_day > $nSeveralPerDay ? $medicine->several_per_day : $nSeveralPerDay;
-                            $params =  [
+                            $params = [
                                 'p_medicine_id'=> $medicine->medicine_id,
                                 'p_user_id'    => Auth::id(), 
                                 'p_date'       => $dateSearch
                             ];
-                            $save   = $this->execSP( 'lsp_save_log', $params );
+                            $save = $this->execSP( 'lsp_save_log', $params );
                         }
                     }  
                 }
