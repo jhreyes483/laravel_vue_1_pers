@@ -262,9 +262,39 @@ CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_investments` ()   BEGIN
     
 END$$
 
-CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_investments_BK` ()   BEGIN
+CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_investments`()
+BEGIN
 
-	SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));	 
+	SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));	
+    
+    WITH fechas AS (
+        SELECT 
+        i.id,
+        /* Día de pago mes actual */
+        STR_TO_DATE(
+            CONCAT(
+                YEAR(CURDATE()), '-', 
+                LPAD(MONTH(CURDATE()), 2, '0'), '-', 
+                LPAD(LEAST(i.payday, DAY(LAST_DAY(CURDATE()))), 2, '0')
+            ), '%Y-%m-%d'
+        ) AS dia_pago_mes_actual,
+
+        /* Día de pago mes siguiente */
+        STR_TO_DATE(
+            CONCAT(
+                YEAR(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)), '-', 
+                LPAD(MONTH(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)), 2, '0'), '-', 
+                LPAD(LEAST(i.payday, DAY(LAST_DAY(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)))), 2, '0')
+            ), '%Y-%m-%d'
+        ) AS dia_pago_mes_siguiente,
+        
+		DAY(CURDATE())       AS today,
+        DATE(i.expire)   AS date_expire,
+        DATE(created_at) AS date_created_at,
+        CURDATE()        AS date_curdate
+        FROM investments i
+    )
+    
 	SELECT
     i.id,
 	it.name,
@@ -273,81 +303,40 @@ CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_investments_BK` ()   BE
 	i.entity, 
     i.investment_type_id,
 	#i.valor, 
-    if (investment_type_id = 3,
+    if (investment_type_id = 3 /* Caja interemdia */,
 		(SELECT current_investment FROM  investment_payments WHERE  investment_id = id order by id desc limit 1), 
         i.valor 
         ) valor,
 	i.status,
 	date(i.created_at) created_at, 
- /* expire: si es EGRESO mensual -> día de pago (hoy o mes siguiente según DAY) */
-    CASE
-      WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN
-        CASE
-        /* si el pasgo esta en este mes */
-          WHEN DAY(CURDATE()) <= i.payday THEN
-            STR_TO_DATE(
-              CONCAT(
-                YEAR(CURDATE()), '-',
-                LPAD(MONTH(CURDATE()), 2, '0'), '-',
-                LPAD(LEAST(i.payday, DAY(LAST_DAY(CURDATE()))), 2, '0')
-              ),
-              '%Y-%m-%d'
-            )
-          ELSE
-          /** si ya paso el pago */
-            STR_TO_DATE(
-              CONCAT(
-                YEAR(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)), '-',
-                LPAD(MONTH(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)), 2, '0'), '-',
-                LPAD(LEAST(i.payday, DAY(LAST_DAY(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)))), 2, '0')
-              ),
-              '%Y-%m-%d'
-            )
-        END
-      ELSE DATE(i.expire)
-    END AS expire,
+   /* expire: si es EGRESO mensual -> día de pago (hoy o mes siguiente según DAY) */
+   /* expire */
+	CASE
+		WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN
+			CASE
+				WHEN f.today <= i.payday THEN f.dia_pago_mes_actual
+				ELSE f.dia_pago_mes_siguiente
+			END
+		ELSE f.date_expire
+	END AS expire,
+
 	#date(i.expire) expire,
 	i.term,  
-	DATEDIFF( date(curdate()) ,date(i.created_at)) days_true,
+	DATEDIFF(f.date_curdate, f.date_created_at) days_true,
 	/* retiro */
 	CASE 
 		WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN 
-			IF (
-				/** DIA DE PAGO MES ACTUAL */
-				CURDATE() = STR_TO_DATE(
-					CONCAT(
-						YEAR(CURDATE()), '-', 
-						LPAD(MONTH(CURDATE()), 2, '0'), '-', 
-						LPAD(i.payday, 2, '0')
-					), '%Y-%m-%d'
-				),
-				1, 
-				0
-			)
+			IF (f.date_curdate = f.dia_pago_mes_actual, 1, 0)
 		ELSE 
-			IF (
-				CURDATE() = date(i.expire),
-				1, 
-				0
-			)
-		END AS retiro,
+			IF (f.date_curdate = f.date_expire, 1, 0)
+	END AS retiro,
 	g.profit_obtained,
-    /* days_restantes */
-    CASE 
-      WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN 
-			DATEDIFF(
-				/* DIA DE PAGO MES ACTUAL */
-				STR_TO_DATE(
-				CONCAT(
-					YEAR(CURDATE()), '-', 
-					LPAD(MONTH(CURDATE()), 2, '0'), '-', 
-					LPAD(i.payday, 2, '0')
-					), '%Y-%m-%d'
-				),
-				CURDATE()
-			)
-      ELSE i.term - DATEDIFF(CURDATE(), DATE(i.created_at))
-    END AS days_restantes
+	/* days_restantes */
+	CASE 
+		WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN 
+			DATEDIFF(f.dia_pago_mes_actual, f.date_curdate)
+		ELSE i.term - DATEDIFF(f.date_curdate, f.date_created_at)
+	END AS days_restantes
     
 	FROM investments i 
 	JOIN investments_types it ON it.id = investment_type_id 
@@ -356,10 +345,8 @@ CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_investments_BK` ()   BE
 		FROM  investment_payments ip 
         GROUP BY investment_id
     ) g ON g.investment_id = i.id 
+    LEFT JOIN fechas f ON f.id = i.id
     ORDER BY i.item_order;
-    
-
-    
     
 END$$
 
