@@ -104,60 +104,77 @@ CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_earrings` (IN `p_user_i
     ORDER BY  b.medicines_types_id, b.medicine_id DESC;
 END$$
 
-CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_earrings_BK` (IN `p_user_id` INT, IN `p_date_search` DATE)   BEGIN
+CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_earrings`(
+    IN `p_user_id` INT, 
+    IN `p_date_search` DATE
+)
+BEGIN
     -- Desactivar ONLY_FULL_GROUP_BY
     SET sql_mode = (SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''));
 
+    WITH base AS (
+      SELECT 
+      m.id AS medicine_id, 
+      m.name AS medicine_name,
+      DATE(lm.created_at) AS ultima_toma,
+      m.interval_days,
+      DATE(lm.created_at) + INTERVAL m.interval_days DAY AS proxima_toma,
+      um.several_per_day,
+      IF(m.is_quantity, m.quantity, "N/A") AS quantity,
+      m.descript,
+      u.name AS user_name,
+      lm.created_at AS created_at_lm,
+      m.medicines_types_id
+      FROM log_medicines lm
+      INNER JOIN medicines m ON m.id = lm.medicine_id
+      INNER JOIN user_medicines um ON m.id = um.medicine_id
+      INNER JOIN users u ON u.id = um.user_id
+      WHERE m.status = 1
+        AND u.id = p_user_id
+    ),
+    tomas_dia AS (
+      SELECT 
+      lm3.medicine_id,
+      COUNT(lm3.id) AS cnt
+      FROM log_medicines lm3
+      WHERE DATE(lm3.created_at) = p_date_search
+        AND lm3.user_id = p_user_id
+      GROUP BY lm3.medicine_id
+    ),
+    ultima_toma_dia AS (
+      SELECT 
+      lm2.medicine_id,
+      lm2.id,
+      lm2.created_at
+      FROM log_medicines lm2
+      WHERE DATE(lm2.created_at) = p_date_search
+        AND lm2.user_id = p_user_id
+    )
     SELECT 
-        m.id AS medicine_id, 
-        m.name AS medicine_name, 
-        DATE(lm.created_at) AS ultima_toma, 
-        m.interval_days, 
-        DATE(lm.created_at) + INTERVAL m.interval_days DAY AS proxima_toma, 
-        
-        CASE # Valida si el medicamento tiene mas de una toma por dia
-            WHEN um.several_per_day > 0 THEN
-                CASE 
-                    WHEN (
-                        SELECT COUNT(lm3.id) 
-                        FROM log_medicines lm3 
-                        WHERE DATE(lm3.created_at) = p_date_search 
-                          AND lm3.medicine_id = m.id 
-                          AND lm3.user_id = p_user_id
-                    ) < um.several_per_day 
-                    THEN 0 
-                    ELSE 1 
-                END
-            ELSE 
-                CASE 
-                    WHEN yt.id IS NOT NULL THEN 1 
-                    ELSE 0 
-                END
-        END AS ya_tome,
-        um.several_per_day,
-        IF(m.is_quantity, m.quantity, "N/A") AS quantity,
-        m.descript,
-        TIME(IF(yt.id, yt.created_at, lm.created_at)) AS hora,
-        u.name AS user_name
-
-    FROM log_medicines lm 
-    INNER JOIN medicines m ON m.id = lm.medicine_id
-    INNER JOIN user_medicines um ON m.id = um.medicine_id 
-    INNER JOIN users u ON u.id = um.user_id
-
-    LEFT JOIN (
-        SELECT lm2.id, lm2.medicine_id, lm2.created_at
-        FROM log_medicines lm2
-        WHERE DATE(lm2.created_at) = p_date_search
-          AND lm2.user_id = p_user_id
-    ) yt ON lm.id AND yt.medicine_id = m.id
-
-    WHERE DATE(lm.created_at) + INTERVAL m.interval_days DAY = p_date_search
-      AND m.status = 1
-      AND u.id = p_user_id
-
-    GROUP BY m.id 
-    ORDER BY m.medicines_types_id, lm.id DESC;
+    b.medicine_id,
+    b.medicine_name,
+    b.ultima_toma,
+    b.interval_days,
+    b.proxima_toma,
+    CASE
+      WHEN b.several_per_day > 0 THEN 
+          CASE 
+              WHEN IFNULL(td.cnt, 0) < b.several_per_day THEN 0 ELSE 1 
+          END
+      ELSE 
+          CASE WHEN ut.id IS NOT NULL THEN 1 ELSE 0 END
+    END AS ya_tome,
+    b.several_per_day,
+    b.quantity,
+    b.descript,
+    TIME(IF(ut.id, ut.created_at, b.created_at_lm)) AS hora,
+    b.user_name
+    FROM base b
+    LEFT JOIN tomas_dia td ON td.medicine_id = b.medicine_id
+    LEFT JOIN ultima_toma_dia ut ON ut.medicine_id = b.medicine_id
+    WHERE b.proxima_toma = p_date_search
+    GROUP BY b.medicine_id 
+    ORDER BY  b.medicines_types_id, b.medicine_id DESC;
 END$$
 
 CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_investments` ()   BEGIN
