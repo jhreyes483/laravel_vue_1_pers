@@ -11,6 +11,23 @@ body {
 
 }
 
+.VueTables__table {
+ font-size: 13px;   /*  ajusta a tu preferencia */
+  white-space: nowrap; /* Evita que el texto se divida */
+}
+.VueTables__table th {
+  white-space: normal;   /* Permite que los títulos se partan si son largos */
+}
+
+/* Aumentar ancho mínimo solo a las columnas 'día apertura' y 'día vence' */
+.VueTables__table th:nth-child(7),
+.VueTables__table td:nth-child(7),
+.VueTables__table th:nth-child(8),
+.VueTables__table td:nth-child(8) {
+  min-width: 80px; /* Ajusta el valor a lo que necesites */
+  white-space: nowrap; /* Evita que el texto se divida */
+}
+
 @-moz-keyframes parpadeo {
     0% {
         opacity: 1.0;
@@ -134,7 +151,7 @@ body {
                             <input type="button" value="Buscar" class="btn btn-primary col-10" @click="sendSearch()">
                         </div>
                         <div class="col-md-6">
-                            <input type="button" value="Todos" class="btn btn-warning col-10" @click="saveLogAllDay()">
+                            <input type="button" value="Todos" class="btn btn-warning text-white col-10" @click="saveLogAllDay()">
                         </div>
                         
                     </div>
@@ -193,7 +210,7 @@ body {
             <v-client-table ref="worehouse_table" :columns="columnsFinance" :data="rowsFinance"
                 :options="options_table">
                 <template slot="days_restantes" slot-scope="props">
-                    <span v-if="props.row.investment_type_id == 1">
+                    <span v-if="props.row.investment_type_id == 1  || props.row.nature_account === 'EGRESO'">
                         {{ props.row.days_restantes }}
                     </span>
                 </template>
@@ -330,6 +347,7 @@ export default {
 
             rowsFinance: [],
             columnsFinance: [
+                'nature_account',
                 'name',
                 'type_name',
                 'entity',
@@ -349,13 +367,14 @@ export default {
             options_table: {
                 headings: {
                     //  'medicine_id': 'id',
+                    'nature_account': 'natraleza',
                     'name': 'descripción',
                     'type_name': 'tipo',
                     'entity': 'entidad',
                     'valor': 'valor',
-                    'status': 'estado',
-                    'created_at': 'apertura',
-                    'expire': 'vence',
+                    'status': 'est',
+                    'created_at': 'día apertura',
+                    'expire': 'día vence',
                     'term': 'dias plazo',
                     'days_true': 'dias transcurridos',
                     'days_restantes': 'dias restantes',
@@ -625,24 +644,27 @@ export default {
             let totalCapital = 0;
 
             this.rowsFinance.forEach(item => {
-                let valor = item.valor;
-                let ganancia = item.profit_obtained;
+                if(item.nature_account == "INGRESO"){
+                    let valor = item.valor;
+                    let ganancia = item.profit_obtained;
 
-                // Si viene como string, limpia los caracteres especiales
-                if (typeof valor === 'string') {
-                    valor = valor.replace(/[^0-9]/g, '');
+                    // Si viene como string, limpia los caracteres especiales
+                    if (typeof valor === 'string') {
+                        valor = valor.replace(/[^0-9]/g, '');
+                    }
+
+                    if (typeof ganancia === 'string') {
+                        ganancia = ganancia.replace(/[^0-9]/g, '');
+                    }
+
+                    // Asegúrate de convertirlos a número
+                    const cleanValor = Number(valor) || 0;
+                    const cleanGanancia = Number(ganancia) || 0;
+                    console.log(cleanGanancia)
+                    totalInversion += cleanValor;
+                    totalGanancia += cleanGanancia;
                 }
 
-                if (typeof ganancia === 'string') {
-                    ganancia = ganancia.replace(/[^0-9]/g, '');
-                }
-
-                // Asegúrate de convertirlos a número
-                const cleanValor = Number(valor) || 0;
-                const cleanGanancia = Number(ganancia) || 0;
-                console.log(cleanGanancia)
-                totalInversion += cleanValor;
-                totalGanancia += cleanGanancia;
             });
             this.totalGanancia = totalGanancia;
             this.totalInversion = totalInversion;

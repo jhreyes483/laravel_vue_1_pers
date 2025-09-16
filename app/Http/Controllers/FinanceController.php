@@ -20,6 +20,7 @@ class FinanceController extends Controller
     public function getInvestments()
     {
         $r = $this->execSP('lsp_get_investments', []);
+        //dd($r);
         foreach ($r['data'] as $i => $item) {
             $r['data'][$i]->valor = $this->formato_pesos_colombianos($item->valor);
             $r['data'][$i]->profit_obtained = $this->formato_pesos_colombianos($item->profit_obtained);
@@ -75,6 +76,7 @@ class FinanceController extends Controller
                 'investment_payments.created_at',
                 'investments.name as investment_name',
                 'investments_types.name as type_name',
+                'investments_types.nature_account'
 
             ]);  
 

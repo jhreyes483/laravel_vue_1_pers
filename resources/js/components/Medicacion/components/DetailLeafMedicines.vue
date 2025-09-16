@@ -19,6 +19,7 @@
                                     <th>Hora programada</th>
                                     <th>Medicamento</th>
                                 </tr>
+                                
                             </thead>
                             <tbody>
                                 <tr v-for="(item, index) in receta" :key="index">
@@ -28,6 +29,10 @@
                             </tbody>
                         </table>
                         <div v-else class="text-muted">No hay horarios programados.</div>
+                    </div>
+                    <div v-if="receta[0] ">
+                       <b v-if=" receta[0].medical_prescription != ''">Receta:</b>
+                        <p v-html="receta[0].medical_prescription"></p>
                     </div>
                 </div>
 

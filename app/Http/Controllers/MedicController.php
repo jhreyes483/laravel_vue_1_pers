@@ -93,6 +93,7 @@ class MedicController extends Controller
         ->whereDate('created_at', $fechaHoy)
         ->count();
 
+
         $recipe = DB::table('hours_per_dose')
             ->join('user_medicines', 'hours_per_dose.user_medicines_id', '=', 'user_medicines.id')
             ->join('medicines', 'user_medicines.medicine_id', '=', 'medicines.id')
@@ -100,9 +101,11 @@ class MedicController extends Controller
             ->where('user_medicines.user_id', Auth::id())
             ->orderByDesc('user_medicines.id')
             ->get([
+                'user_medicines.id as user_medicine_id',
                 'medicines.id',
                 'medicines.name as medicine_name',
                 'user_medicines.several_per_day',
+                'user_medicines.medical_prescription',
                 'hours_per_dose.hour'
             ]);
 
@@ -122,15 +125,18 @@ class MedicController extends Controller
         $history = DB::table('log_medicines')
             ->join('medicines', 'log_medicines.medicine_id', '=', 'medicines.id')
             ->join('medicines_types', 'medicines.medicines_types_id', '=', 'medicines_types.id')
+            ->join('user_medicines', 'user_medicines.medicine_id', '=', 'medicines.id')
             ->where('log_medicines.medicine_id', $request->medicine_id)
             ->where('log_medicines.user_id', Auth::id())
+            ->where('user_medicines.user_id', Auth::id())
             ->orderByDesc('log_medicines.created_at')
             ->get([
                 'log_medicines.id',
                 'log_medicines.created_at',
                 'medicines.name as medicine_name',
                 'medicines_types.name as type_name',
-                'medicines.interval_days'
+                'medicines.interval_days',
+                'user_medicines.medical_prescription',
             ]);
 
             foreach($history as $item){
@@ -226,11 +232,11 @@ class MedicController extends Controller
     }
 
     public function saveLogAllDay(Request $request){
-
-        $dateSearch= ( isset( $request->date) ? Carbon::parse($request->date)->toDateString() : Carbon::now('America/Bogota')->toDateTimeString() );
+        $userId     = Auth::id();
+        $dateSearch = ( isset( $request->date) ? Carbon::parse($request->date)->toDateString() : Carbon::now('America/Bogota')->toDateTimeString() );
         $params = [
-            'p_user_id'      => Auth::id(),
-             'p_data_serach' => $dateSearch
+                'p_user_id'     => $userId,
+                'p_data_serach' => $dateSearch
             ];
         $all = $this->execSP('lsp_get_earrings' ,$params);
 
@@ -241,29 +247,28 @@ class MedicController extends Controller
                 $nSeveralPerDay = $medicine->several_per_day > $nSeveralPerDay ? $medicine->several_per_day : $nSeveralPerDay;
                 $params = [
                     'p_medicine_id' => $medicine->medicine_id,
-                     'p_user_id'    => Auth::id(), 
-                     'p_date'       => $dateSearch
-                    ];
-                    $save = $this->execSP('lsp_save_log', $params);
+                    'p_user_id'     => $userId, 
+                    'p_date'        => $dateSearch
+                ];
+                $save = $this->execSP('lsp_save_log', $params);
             }
         }
 
         // Marca las tomas que tiene mas de una en un dia
-        $nSeveralPerDay = $nSeveralPerDay -1;
+       // $nSeveralPerDay = $nSeveralPerDay -1;
         if($nSeveralPerDay > 0){
             for ($i=1; $i < $nSeveralPerDay; $i++) { 
-                $params    = [
-                    'p_user_id'      =>Auth::id(),
-                     'p_data_serach' => $dateSearch
-                    ];
-                 $all      = $this->execSP('lsp_get_earrings', $params);
+                $params = [
+                    'p_user_id'     => $userId,
+                    'p_data_serach' => $dateSearch
+                ];
+                 $all = $this->execSP('lsp_get_earrings', $params);
                 if(isset($all['data']) && count($all['data'])){
                     foreach($all['data'] as $medicine){
                         if($medicine->ya_tome == 0){
-                            $nSeveralPerDay = $medicine->several_per_day > $nSeveralPerDay ? $medicine->several_per_day : $nSeveralPerDay;
                             $params = [
                                 'p_medicine_id'=> $medicine->medicine_id,
-                                'p_user_id'    => Auth::id(), 
+                                'p_user_id'    => $userId, 
                                 'p_date'       => $dateSearch
                             ];
                             $save = $this->execSP( 'lsp_save_log', $params );

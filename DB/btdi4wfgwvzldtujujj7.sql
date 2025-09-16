@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: btdi4wfgwvzldtujujj7-mysql.services.clever-cloud.com:3306
--- Tiempo de generación: 02-08-2025 a las 15:25:55
+-- Tiempo de generación: 16-09-2025 a las 21:32:49
 -- Versión del servidor: 8.0.22-13
 -- Versión de PHP: 8.2.29
 
@@ -39,6 +39,75 @@ CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_earrings` (IN `p_user_i
     -- Desactivar ONLY_FULL_GROUP_BY
     SET sql_mode = (SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''));
 
+    WITH base AS (
+        SELECT 
+            m.id AS medicine_id, 
+            m.name AS medicine_name,
+            DATE(lm.created_at) AS ultima_toma,
+            m.interval_days,
+            DATE(lm.created_at) + INTERVAL m.interval_days DAY AS proxima_toma,
+            um.several_per_day,
+            IF(m.is_quantity, m.quantity, "N/A") AS quantity,
+            m.descript,
+            u.name AS user_name,
+            lm.created_at AS created_at_lm,
+            m.medicines_types_id
+        FROM log_medicines lm
+        INNER JOIN medicines m ON m.id = lm.medicine_id
+        INNER JOIN user_medicines um ON m.id = um.medicine_id
+        INNER JOIN users u ON u.id = um.user_id
+        WHERE m.status = 1
+          AND u.id = p_user_id
+    ),
+    tomas_dia AS (
+        SELECT 
+            lm3.medicine_id,
+            COUNT(lm3.id) AS cnt
+        FROM log_medicines lm3
+        WHERE DATE(lm3.created_at) = p_date_search
+          AND lm3.user_id = p_user_id
+        GROUP BY lm3.medicine_id
+    ),
+    ultima_toma_dia AS (
+        SELECT 
+            lm2.medicine_id,
+            lm2.id,
+            lm2.created_at
+        FROM log_medicines lm2
+        WHERE DATE(lm2.created_at) = p_date_search
+          AND lm2.user_id = p_user_id
+    )
+    SELECT 
+        b.medicine_id,
+        b.medicine_name,
+        b.ultima_toma,
+        b.interval_days,
+        b.proxima_toma,
+        CASE
+            WHEN b.several_per_day > 0 THEN 
+                CASE 
+                    WHEN IFNULL(td.cnt, 0) < b.several_per_day THEN 0 ELSE 1 
+                END
+            ELSE 
+                CASE WHEN ut.id IS NOT NULL THEN 1 ELSE 0 END
+        END AS ya_tome,
+        b.several_per_day,
+        b.quantity,
+        b.descript,
+        TIME(IF(ut.id, ut.created_at, b.created_at_lm)) AS hora,
+        b.user_name
+    FROM base b
+    LEFT JOIN tomas_dia td ON td.medicine_id = b.medicine_id
+    LEFT JOIN ultima_toma_dia ut ON ut.medicine_id = b.medicine_id
+    WHERE b.proxima_toma = p_date_search
+    GROUP BY b.medicine_id 
+    ORDER BY  b.medicines_types_id, b.medicine_id DESC;
+END$$
+
+CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_earrings_BK` (IN `p_user_id` INT, IN `p_date_search` DATE)   BEGIN
+    -- Desactivar ONLY_FULL_GROUP_BY
+    SET sql_mode = (SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''));
+
     SELECT 
         m.id AS medicine_id, 
         m.name AS medicine_name, 
@@ -50,7 +119,7 @@ CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_earrings` (IN `p_user_i
             WHEN um.several_per_day > 0 THEN
                 CASE 
                     WHEN (
-                        SELECT COUNT(*) 
+                        SELECT COUNT(lm3.id) 
                         FROM log_medicines lm3 
                         WHERE DATE(lm3.created_at) = p_date_search 
                           AND lm3.medicine_id = m.id 
@@ -93,11 +162,36 @@ END$$
 
 CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_investments` ()   BEGIN
 
-	SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));	 
+	SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));	
+    
+    WITH fechas AS (
+        SELECT 
+            i.id,
+            /* Día de pago mes actual */
+            STR_TO_DATE(
+                CONCAT(
+                    YEAR(CURDATE()), '-', 
+                    LPAD(MONTH(CURDATE()), 2, '0'), '-', 
+                    LPAD(LEAST(i.payday, DAY(LAST_DAY(CURDATE()))), 2, '0')
+                ), '%Y-%m-%d'
+            ) AS dia_pago_actual,
+            
+            /* Día de pago mes siguiente */
+            STR_TO_DATE(
+                CONCAT(
+                    YEAR(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)), '-', 
+                    LPAD(MONTH(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)), 2, '0'), '-', 
+                    LPAD(LEAST(i.payday, DAY(LAST_DAY(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)))), 2, '0')
+                ), '%Y-%m-%d'
+            ) AS dia_pago_siguiente
+        FROM investments i
+    )
+    
 	SELECT
     i.id,
 	it.name,
 	i.name type_name, 
+    it.nature_account,
 	i.entity, 
     i.investment_type_id,
 	#i.valor, 
@@ -106,14 +200,222 @@ CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_investments` ()   BEGIN
         i.valor 
         ) valor,
 	i.status,
-	i.term - (DATEDIFF( date(curdate()) ,date(i.created_at))) days_restantes,
 	date(i.created_at) created_at, 
-	date(i.expire) expire,
+   /* expire: si es EGRESO mensual -> día de pago (hoy o mes siguiente según DAY) */
+   /* expire */
+	CASE
+		WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN
+			CASE
+				WHEN DAY(CURDATE()) <= i.payday THEN f.dia_pago_actual
+				ELSE f.dia_pago_siguiente
+			END
+		ELSE DATE(i.expire)
+	END AS expire,
+
+	#date(i.expire) expire,
 	i.term,  
 	DATEDIFF( date(curdate()) ,date(i.created_at)) days_true,
-	if(curdate() =  date(i.expire), 1 , 0 ) retiro,
-	g.profit_obtained
+	/* retiro */
+	CASE 
+		WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN 
+			IF (CURDATE() = f.dia_pago_actual, 1, 0)
+		ELSE 
+			IF (CURDATE() = DATE(i.expire), 1, 0)
+	END AS retiro,
+	g.profit_obtained,
+	/* days_restantes */
+	CASE 
+		WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN 
+			DATEDIFF(f.dia_pago_actual, CURDATE())
+		ELSE i.term - DATEDIFF(CURDATE(), DATE(i.created_at))
+	END AS days_restantes
+    
+	FROM investments i 
+	JOIN investments_types it ON it.id = investment_type_id 
+    LEFT JOIN (
+		SELECT investment_id,  sum(current_profit)  profit_obtained, current_investment
+		FROM  investment_payments ip 
+        GROUP BY investment_id
+    ) g ON g.investment_id = i.id 
+    LEFT JOIN fechas f ON f.id = i.id
+    ORDER BY i.item_order;
+    
 
+    
+    
+END$$
+
+CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_investments_BK` ()   BEGIN
+
+	SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));	 
+	SELECT
+    i.id,
+	it.name,
+	i.name type_name, 
+    it.nature_account,
+	i.entity, 
+    i.investment_type_id,
+	#i.valor, 
+    if (investment_type_id = 3,
+		(SELECT current_investment FROM  investment_payments WHERE  investment_id = id order by id desc limit 1), 
+        i.valor 
+        ) valor,
+	i.status,
+	date(i.created_at) created_at, 
+ /* expire: si es EGRESO mensual -> día de pago (hoy o mes siguiente según DAY) */
+    CASE
+      WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN
+        CASE
+        /* si el pasgo esta en este mes */
+          WHEN DAY(CURDATE()) <= i.payday THEN
+            STR_TO_DATE(
+              CONCAT(
+                YEAR(CURDATE()), '-',
+                LPAD(MONTH(CURDATE()), 2, '0'), '-',
+                LPAD(LEAST(i.payday, DAY(LAST_DAY(CURDATE()))), 2, '0')
+              ),
+              '%Y-%m-%d'
+            )
+          ELSE
+          /** si ya paso el pago */
+            STR_TO_DATE(
+              CONCAT(
+                YEAR(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)), '-',
+                LPAD(MONTH(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)), 2, '0'), '-',
+                LPAD(LEAST(i.payday, DAY(LAST_DAY(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)))), 2, '0')
+              ),
+              '%Y-%m-%d'
+            )
+        END
+      ELSE DATE(i.expire)
+    END AS expire,
+	#date(i.expire) expire,
+	i.term,  
+	DATEDIFF( date(curdate()) ,date(i.created_at)) days_true,
+	/* retiro */
+	CASE 
+		WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN 
+			IF (
+				/** DIA DE PAGO MES ACTUAL */
+				CURDATE() = STR_TO_DATE(
+					CONCAT(
+						YEAR(CURDATE()), '-', 
+						LPAD(MONTH(CURDATE()), 2, '0'), '-', 
+						LPAD(i.payday, 2, '0')
+					), '%Y-%m-%d'
+				),
+				1, 
+				0
+			)
+		ELSE 
+			IF (
+				CURDATE() = date(i.expire),
+				1, 
+				0
+			)
+		END AS retiro,
+	g.profit_obtained,
+    /* days_restantes */
+    CASE 
+      WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN 
+			DATEDIFF(
+				/* DIA DE PAGO MES ACTUAL */
+				STR_TO_DATE(
+				CONCAT(
+					YEAR(CURDATE()), '-', 
+					LPAD(MONTH(CURDATE()), 2, '0'), '-', 
+					LPAD(i.payday, 2, '0')
+					), '%Y-%m-%d'
+				),
+				CURDATE()
+			)
+      ELSE i.term - DATEDIFF(CURDATE(), DATE(i.created_at))
+    END AS days_restantes
+    
+	FROM investments i 
+	JOIN investments_types it ON it.id = investment_type_id 
+    LEFT JOIN (
+		SELECT investment_id,  sum(current_profit)  profit_obtained, current_investment
+		FROM  investment_payments ip 
+        GROUP BY investment_id
+    ) g ON g.investment_id = i.id 
+    ORDER BY i.item_order;
+    
+
+    
+    
+END$$
+
+CREATE DEFINER=`ui9ocui64crd4rjt`@`%` PROCEDURE `lsp_get_investments_LV1` ()   BEGIN
+
+	SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));	
+    
+    WITH fechas AS (
+        SELECT 
+            i.id,
+            /* Día de pago mes actual */
+            STR_TO_DATE(
+                CONCAT(
+                    YEAR(CURDATE()), '-', 
+                    LPAD(MONTH(CURDATE()), 2, '0'), '-', 
+                    LPAD(LEAST(i.payday, DAY(LAST_DAY(CURDATE()))), 2, '0')
+                ), '%Y-%m-%d'
+            ) AS dia_pago_actual,
+            
+            /* Día de pago mes siguiente */
+            STR_TO_DATE(
+                CONCAT(
+                    YEAR(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)), '-', 
+                    LPAD(MONTH(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)), 2, '0'), '-', 
+                    LPAD(LEAST(i.payday, DAY(LAST_DAY(DATE_ADD(CURDATE(), INTERVAL 1 MONTH)))), 2, '0')
+                ), '%Y-%m-%d'
+            ) AS dia_pago_siguiente
+        FROM investments i
+    )
+    
+	SELECT
+    i.id,
+	it.name,
+	i.name type_name, 
+    it.nature_account,
+	i.entity, 
+    i.investment_type_id,
+	#i.valor, 
+    if (investment_type_id = 3,
+		(SELECT current_investment FROM  investment_payments WHERE  investment_id = id order by id desc limit 1), 
+        i.valor 
+        ) valor,
+	i.status,
+	date(i.created_at) created_at, 
+   /* expire: si es EGRESO mensual -> día de pago (hoy o mes siguiente según DAY) */
+   /* expire */
+	CASE
+		WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN
+			CASE
+				WHEN DAY(CURDATE()) <= i.payday THEN f.dia_pago_actual
+				ELSE f.dia_pago_siguiente
+			END
+		ELSE DATE(i.expire)
+	END AS expire,
+
+	#date(i.expire) expire,
+	i.term,  
+	DATEDIFF( date(curdate()) ,date(i.created_at)) days_true,
+	/* retiro */
+	CASE 
+		WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN 
+			IF (CURDATE() = f.dia_pago_actual, 1, 0)
+		ELSE 
+			IF (CURDATE() = DATE(i.expire), 1, 0)
+	END AS retiro,
+	g.profit_obtained,
+	/* days_restantes */
+	CASE 
+		WHEN it.nature_account = 'EGRESO' AND i.monthly = 1 THEN 
+			DATEDIFF(f.dia_pago_actual, CURDATE())
+		ELSE i.term - DATEDIFF(CURDATE(), DATE(i.created_at))
+	END AS days_restantes
+    
 	FROM investments i 
 	JOIN investments_types it ON it.id = investment_type_id 
     LEFT JOIN (
@@ -272,7 +574,15 @@ INSERT INTO `hours_per_dose` (`id`, `hour`, `user_medicines_id`, `created_at`) V
 (2, '13:10:00', 17, '2025-08-02 13:41:36'),
 (3, '18:00:00', 17, '2025-08-02 13:41:36'),
 (4, '13:10:00', 36, '2025-08-02 13:41:36'),
-(5, '18:10:00', 36, '2025-08-02 13:41:36');
+(5, '18:10:00', 36, '2025-08-02 13:41:36'),
+(6, '18:10:00', 32, '2025-08-02 13:41:36'),
+(7, '18:15:00', 32, '2025-08-02 13:41:36'),
+(8, '18:26:00', 32, '2025-08-02 13:41:36'),
+(9, '18:32:00', 32, '2025-08-02 13:41:36'),
+(10, '18:32:00', 31, '2025-08-02 13:41:36'),
+(11, '18:40:00', 31, '2025-08-02 13:41:36'),
+(12, '18:45:00', 31, '2025-08-02 13:41:36'),
+(13, '18:50:00', 31, '2025-08-02 13:41:36');
 
 -- --------------------------------------------------------
 
@@ -291,6 +601,8 @@ CREATE TABLE `investments` (
   `updated_at` datetime DEFAULT NULL,
   `expire` datetime DEFAULT NULL,
   `term` int DEFAULT NULL,
+  `payday` int NOT NULL,
+  `monthly` int NOT NULL,
   `profit_obtained` int DEFAULT '0',
   `item_order` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -299,12 +611,14 @@ CREATE TABLE `investments` (
 -- Volcado de datos para la tabla `investments`
 --
 
-INSERT INTO `investments` (`id`, `name`, `entity`, `valor`, `status`, `investment_type_id`, `created_at`, `updated_at`, `expire`, `term`, `profit_obtained`, `item_order`) VALUES
-(1, '9,25% EA', 'Davivienda', 38299000, 1, 1, '2025-04-23 16:05:44', '2025-04-23 16:05:44', '2026-04-23 16:05:44', 360, 0, 1),
-(2, '10% EA', 'Pibank', 3477593, 1, 1, '2025-04-24 16:05:44', '2025-10-24 16:05:44', '2025-10-24 16:05:44', 180, 0, 2),
-(3, 'JAV 11% EA', 'Uala', 8348000, 1, 4, '2025-07-01 16:05:44', '2025-04-23 16:05:44', NULL, 360, 0, 4),
-(4, 'LID 11% EA', 'Uala', 8300000, 1, 4, '2025-07-01 16:05:44', '2025-04-23 16:05:44', NULL, 360, 0, 5),
-(5, '12% EA', 'Pibank', 4599791, 1, 4, '2025-07-29 13:22:59', '2025-07-29 16:05:44', NULL, 30, 0, 3);
+INSERT INTO `investments` (`id`, `name`, `entity`, `valor`, `status`, `investment_type_id`, `created_at`, `updated_at`, `expire`, `term`, `payday`, `monthly`, `profit_obtained`, `item_order`) VALUES
+(1, '9,25% EA', 'Davivienda', 38299000, 1, 1, '2025-04-23 16:05:44', '2025-04-23 16:05:44', '2026-04-23 16:05:44', 360, 0, 0, 0, 1),
+(2, '10% EA', 'Pibank', 3477593, 1, 1, '2025-04-24 16:05:44', '2025-10-24 16:05:44', '2025-10-24 16:05:44', 180, 0, 0, 0, 2),
+(3, 'JAV 11% EA', 'Uala', 8348000, 1, 4, '2025-07-01 16:05:44', '2025-04-23 16:05:44', NULL, 360, 0, 0, 0, 4),
+(4, 'LID 11% EA', 'Uala', 8200000, 1, 4, '2025-07-01 16:05:44', '2025-04-23 16:05:44', NULL, 360, 0, 0, 0, 5),
+(5, '12% EA', 'Pibank', 4599791, 1, 4, '2025-07-29 13:22:59', '2025-07-29 16:05:44', NULL, 30, 0, 0, 0, 3),
+(7, 'Arrriendo', 'Hogar', 550000, 1, 5, '2025-09-16 12:18:15', '2025-09-16 12:18:15', NULL, NULL, 16, 1, 0, 10),
+(8, 'Tarjeta credito', 'Rapid', 400000, 1, 6, '2025-09-16 12:18:15', '2025-09-16 12:18:15', NULL, NULL, 26, 1, 0, 10);
 
 -- --------------------------------------------------------
 
@@ -316,6 +630,7 @@ CREATE TABLE `investments_types` (
   `id` int NOT NULL,
   `name` varchar(250) DEFAULT NULL,
   `status` int DEFAULT NULL,
+  `nature_account` varchar(120) NOT NULL,
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -324,11 +639,13 @@ CREATE TABLE `investments_types` (
 -- Volcado de datos para la tabla `investments_types`
 --
 
-INSERT INTO `investments_types` (`id`, `name`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'CDT', 1, '2025-04-16 16:01:39', '2023-04-16 16:01:39'),
-(2, 'Fondo de invercion', 1, '2025-04-16 16:01:39', '2023-04-16 16:01:39'),
-(3, 'Caja interemdia', 1, '2023-04-16 16:01:39', '2023-04-16 16:01:39'),
-(4, 'Cuenta de alto rendimiento', 1, '2025-07-29 13:57:27', '2025-07-29 13:57:27');
+INSERT INTO `investments_types` (`id`, `name`, `status`, `nature_account`, `created_at`, `updated_at`) VALUES
+(1, 'CDT', 1, 'INGRESO', '2025-04-16 16:01:39', '2023-04-16 16:01:39'),
+(2, 'Fondo de invercion', 1, 'INGRESO', '2025-04-16 16:01:39', '2023-04-16 16:01:39'),
+(3, 'Caja interemdia', 1, 'INGRESO', '2023-04-16 16:01:39', '2023-04-16 16:01:39'),
+(4, 'C alto rendimiento', 1, 'INGRESO', '2025-07-29 13:57:27', '2025-07-29 13:57:27'),
+(5, 'Gasto fijo', 1, 'EGRESO', '2025-08-02 13:41:36', '2025-08-02 13:41:36'),
+(6, 'Credito', 1, 'EGRESO', '2025-08-02 13:41:36', '2025-08-02 13:41:36');
 
 -- --------------------------------------------------------
 
@@ -356,7 +673,8 @@ INSERT INTO `investment_payments` (`id`, `current_investment`, `created_at`, `up
 (10, NULL, '2025-08-01 01:50:15', '2025-08-01 01:50:15', 3, 1, 5000),
 (11, NULL, '2025-08-01 01:50:26', '2025-08-01 01:50:26', 4, 1, 5000),
 (12, NULL, '2025-08-01 14:33:31', '2025-08-01 14:33:31', 5, 1, 22223),
-(13, NULL, '2025-08-01 14:35:08', '2025-08-01 14:35:08', 3, 1, 2388);
+(13, NULL, '2025-08-01 14:35:08', '2025-08-01 14:35:08', 3, 1, 2388),
+(14, NULL, '2025-09-01 17:11:17', '2025-09-01 17:11:17', 5, 1, 44695);
 
 -- --------------------------------------------------------
 
@@ -377,64 +695,106 @@ CREATE TABLE `log_medicines` (
 --
 
 INSERT INTO `log_medicines` (`id`, `created_at`, `updated_at`, `medicine_id`, `user_id`) VALUES
-(784, '2023-11-24 15:07:35', '2023-11-24 15:07:35', 4, 1),
-(817, '2024-10-14 11:52:25', '2024-10-14 11:52:25', 9, 1),
-(818, '2024-10-14 11:52:25', '2024-10-14 11:52:25', 1, 1),
-(819, '2024-10-15 11:52:25', '2024-10-15 11:52:25', 9, 1),
-(820, '2024-10-15 11:52:25', '2024-10-15 11:52:25', 4, 1),
-(821, '2024-10-16 11:52:25', '2024-10-16 11:52:25', 9, 1),
-(822, '2024-10-16 11:52:25', '2024-10-16 11:52:25', 1, 1),
-(823, '2024-10-17 11:52:25', '2024-10-17 11:52:25', 9, 1),
-(824, '2024-10-17 11:52:25', '2024-10-17 11:52:25', 4, 1),
-(825, '2024-10-18 11:52:25', '2024-10-18 11:52:25', 9, 1),
-(826, '2024-10-18 11:52:25', '2024-10-18 11:52:25', 1, 1),
-(827, '2024-10-19 11:52:25', '2024-10-19 11:52:25', 9, 1),
-(828, '2024-10-19 11:52:25', '2024-10-19 11:52:25', 4, 1),
-(830, '2024-10-19 11:52:25', '2024-10-19 11:52:25', 7, 1),
-(831, '2024-10-19 11:52:25', '2024-10-19 11:52:25', 13, 1),
-(832, '2024-10-20 22:32:45', '2024-10-20 22:32:45', 13, 1),
-(833, '2024-10-20 22:32:47', '2024-10-20 22:32:47', 7, 1),
-(834, '2024-10-21 22:32:54', '2024-10-21 22:32:54', 7, 1),
-(835, '2024-10-21 22:32:59', '2024-10-21 22:32:59', 13, 1),
-(836, '2024-10-22 22:33:06', '2024-10-22 22:33:06', 13, 1),
-(837, '2024-10-22 22:33:09', '2024-10-22 22:33:09', 7, 1),
-(838, '2024-10-23 22:33:40', '2024-10-23 22:33:40', 7, 1),
-(839, '2024-10-23 22:33:45', '2024-10-23 22:33:45', 13, 1),
-(840, '2024-10-20 22:34:11', '2024-10-20 22:34:11', 9, 1),
-(841, '2024-10-20 22:34:18', '2024-10-20 22:34:18', 1, 1),
-(843, '2025-07-28 22:34:11', '2024-10-20 22:34:11', 9, 1),
-(845, '2025-07-28 22:34:11', '2024-10-20 22:34:11', 7, 1),
-(847, '2025-07-28 22:34:11', '2025-07-28 22:34:11', 15, 1),
-(848, '2025-07-28 22:34:11', '2025-07-28 22:34:11', 16, 1),
-(849, '2025-07-28 22:34:11', '2025-07-28 22:34:11', 17, 1),
-(850, '2025-07-29 00:00:00', '2025-07-29 00:00:00', 9, 1),
-(853, '2025-07-28 22:34:11', '2025-07-28 22:34:11', 20, 1),
-(854, '2025-07-28 22:34:11', '2025-07-28 22:34:11', 21, 1),
-(856, '2025-07-29 00:00:00', '2025-07-29 00:00:00', 20, 1),
-(857, '2025-07-29 00:00:00', '2025-07-29 00:00:00', 16, 1),
-(858, '2025-07-29 11:39:30', '2025-07-29 11:39:30', 21, 1),
-(859, '2025-07-29 11:39:41', '2025-07-29 11:39:41', 7, 1),
-(860, '2025-07-30 16:31:56', '2025-07-30 16:31:56', 9, 1),
-(861, '2025-07-29 00:00:00', '2025-07-29 00:00:00', 15, 1),
-(862, '2025-07-30 00:00:00', '2025-07-30 00:00:00', 15, 1),
-(863, '2025-07-30 19:55:16', '2025-07-30 19:55:16', 7, 1),
-(865, '2025-07-30 19:55:26', '2025-07-30 19:55:26', 21, 1),
-(866, '2025-07-30 19:55:35', '2025-07-30 19:55:35', 16, 1),
-(871, '2025-07-31 19:59:07', '2025-07-31 19:59:07', 20, 1),
-(872, '2025-07-31 19:59:17', '2025-07-31 19:59:17', 16, 1),
-(873, '2025-07-31 19:59:28', '2025-07-31 19:59:28', 21, 1),
-(874, '2025-07-31 20:04:17', '2025-07-31 20:04:17', 7, 1),
-(875, '2025-07-31 20:04:29', '2025-07-31 20:04:29', 15, 1),
-(877, '2025-07-31 20:06:28', '2025-07-31 20:06:28', 9, 1),
-(878, '2025-07-31 20:06:28', '2025-07-31 20:06:28', 18, 1),
-(879, '2025-08-01 00:00:00', '2025-08-01 00:00:00', 9, 1),
-(880, '2025-08-01 00:00:00', '2025-08-01 00:00:00', 20, 1),
-(881, '2025-08-01 00:00:00', '2025-08-01 00:00:00', 7, 1),
-(883, '2025-08-01 14:03:56', '2025-08-01 14:03:56', 15, 1),
-(884, '2025-07-30 14:03:56', '2025-07-30 14:03:56', 3, 1),
-(885, '2025-08-01 16:22:16', '2025-08-01 16:22:16', 17, 1),
-(886, '2025-08-01 19:19:54', '2025-08-01 19:19:54', 21, 1),
-(891, '2025-08-02 09:44:10', '2025-08-02 09:44:10', 7, 1);
+(1202, '2025-09-05 00:00:00', '2025-09-05 00:00:00', 7, 1),
+(1203, '2025-09-06 00:00:00', '2025-09-06 00:00:00', 15, 1),
+(1204, '2025-09-06 00:00:00', '2025-09-06 00:00:00', 9, 1),
+(1205, '2025-09-06 00:00:00', '2025-09-06 00:00:00', 21, 1),
+(1206, '2025-09-06 00:00:00', '2025-09-06 00:00:00', 20, 1),
+(1207, '2025-09-06 00:00:00', '2025-09-06 00:00:00', 7, 1),
+(1208, '2025-09-06 00:00:00', '2025-09-06 00:00:00', 20, 1),
+(1209, '2025-09-06 00:00:00', '2025-09-06 00:00:00', 7, 1),
+(1210, '2025-09-06 00:00:00', '2025-09-06 00:00:00', 7, 1),
+(1211, '2025-09-05 00:00:00', '2025-09-05 00:00:00', 18, 1),
+(1212, '2025-09-07 00:00:00', '2025-09-07 00:00:00', 9, 1),
+(1213, '2025-09-07 00:00:00', '2025-09-07 00:00:00', 15, 1),
+(1214, '2025-09-07 00:00:00', '2025-09-07 00:00:00', 20, 1),
+(1215, '2025-09-07 00:00:00', '2025-09-07 00:00:00', 21, 1),
+(1216, '2025-09-07 00:00:00', '2025-09-07 00:00:00', 7, 1),
+(1217, '2025-09-07 00:00:00', '2025-09-07 00:00:00', 20, 1),
+(1218, '2025-09-07 00:00:00', '2025-09-07 00:00:00', 7, 1),
+(1219, '2025-09-07 00:00:00', '2025-09-07 00:00:00', 7, 1),
+(1220, '2025-09-08 00:00:00', '2025-09-08 00:00:00', 15, 1),
+(1221, '2025-09-08 00:00:00', '2025-09-08 00:00:00', 9, 1),
+(1222, '2025-09-08 00:00:00', '2025-09-08 00:00:00', 21, 1),
+(1223, '2025-09-08 00:00:00', '2025-09-08 00:00:00', 20, 1),
+(1224, '2025-09-08 00:00:00', '2025-09-08 00:00:00', 17, 1),
+(1225, '2025-09-08 00:00:00', '2025-09-08 00:00:00', 7, 1),
+(1226, '2025-09-08 00:00:00', '2025-09-08 00:00:00', 20, 1),
+(1227, '2025-09-08 00:00:00', '2025-09-08 00:00:00', 17, 1),
+(1228, '2025-09-08 00:00:00', '2025-09-08 00:00:00', 7, 1),
+(1229, '2025-09-08 00:00:00', '2025-09-08 00:00:00', 17, 1),
+(1230, '2025-09-08 00:00:00', '2025-09-08 00:00:00', 7, 1),
+(1231, '2025-09-08 00:00:00', '2025-09-08 00:00:00', 17, 1),
+(1232, '2025-09-09 20:53:52', '2025-09-09 20:53:52', 15, 1),
+(1233, '2025-09-09 20:55:46', '2025-09-09 20:55:46', 18, 1),
+(1234, '2025-09-09 21:02:36', '2025-09-09 21:02:36', 18, 1),
+(1235, '2025-09-09 21:03:41', '2025-09-09 21:03:41', 18, 1),
+(1236, '2025-09-09 21:04:22', '2025-09-09 21:04:22', 18, 1),
+(1237, '2025-09-09 21:05:07', '2025-09-09 21:05:07', 7, 1),
+(1238, '2025-09-09 00:00:00', '2025-09-09 00:00:00', 9, 1),
+(1239, '2025-09-09 00:00:00', '2025-09-09 00:00:00', 20, 1),
+(1240, '2025-09-09 00:00:00', '2025-09-09 00:00:00', 21, 1),
+(1241, '2025-09-09 00:00:00', '2025-09-09 00:00:00', 7, 1),
+(1242, '2025-09-09 00:00:00', '2025-09-09 00:00:00', 20, 1),
+(1243, '2025-09-09 00:00:00', '2025-09-09 00:00:00', 7, 1),
+(1244, '2025-09-10 00:00:00', '2025-09-10 00:00:00', 9, 1),
+(1245, '2025-09-10 00:00:00', '2025-09-10 00:00:00', 15, 1),
+(1246, '2025-09-10 00:00:00', '2025-09-10 00:00:00', 21, 1),
+(1247, '2025-09-10 00:00:00', '2025-09-10 00:00:00', 20, 1),
+(1248, '2025-09-10 00:00:00', '2025-09-10 00:00:00', 7, 1),
+(1249, '2025-09-10 00:00:00', '2025-09-10 00:00:00', 20, 1),
+(1250, '2025-09-10 00:00:00', '2025-09-10 00:00:00', 7, 1),
+(1251, '2025-09-10 00:00:00', '2025-09-10 00:00:00', 7, 1),
+(1252, '2025-09-11 15:45:07', '2025-09-11 15:45:07', 15, 1),
+(1253, '2025-09-11 16:12:12', '2025-09-11 16:12:12', 9, 1),
+(1254, '2025-09-11 00:00:00', '2025-09-11 00:00:00', 20, 1),
+(1255, '2025-09-11 00:00:00', '2025-09-11 00:00:00', 21, 1),
+(1256, '2025-09-11 00:00:00', '2025-09-11 00:00:00', 7, 1),
+(1257, '2025-09-11 00:00:00', '2025-09-11 00:00:00', 20, 1),
+(1258, '2025-09-11 00:00:00', '2025-09-11 00:00:00', 7, 1),
+(1259, '2025-09-11 00:00:00', '2025-09-11 00:00:00', 7, 1),
+(1260, '2025-09-12 00:00:00', '2025-09-12 00:00:00', 9, 1),
+(1261, '2025-09-12 00:00:00', '2025-09-12 00:00:00', 15, 1),
+(1262, '2025-09-12 00:00:00', '2025-09-12 00:00:00', 21, 1),
+(1263, '2025-09-12 00:00:00', '2025-09-12 00:00:00', 20, 1),
+(1264, '2025-09-12 00:00:00', '2025-09-12 00:00:00', 17, 1),
+(1265, '2025-09-12 00:00:00', '2025-09-12 00:00:00', 7, 1),
+(1266, '2025-09-12 00:00:00', '2025-09-12 00:00:00', 20, 1),
+(1267, '2025-09-12 00:00:00', '2025-09-12 00:00:00', 17, 1),
+(1268, '2025-09-12 00:00:00', '2025-09-12 00:00:00', 7, 1),
+(1269, '2025-09-12 00:00:00', '2025-09-12 00:00:00', 17, 1),
+(1270, '2025-09-12 00:00:00', '2025-09-12 00:00:00', 7, 1),
+(1271, '2025-09-12 00:00:00', '2025-09-12 00:00:00', 17, 1),
+(1272, '2025-09-13 00:00:00', '2025-09-13 00:00:00', 15, 1),
+(1273, '2025-09-13 00:00:00', '2025-09-13 00:00:00', 9, 1),
+(1274, '2025-09-13 00:00:00', '2025-09-13 00:00:00', 20, 1),
+(1275, '2025-09-13 00:00:00', '2025-09-13 00:00:00', 21, 1),
+(1276, '2025-09-13 00:00:00', '2025-09-13 00:00:00', 18, 1),
+(1277, '2025-09-13 00:00:00', '2025-09-13 00:00:00', 7, 1),
+(1278, '2025-09-13 00:00:00', '2025-09-13 00:00:00', 20, 1),
+(1279, '2025-09-13 00:00:00', '2025-09-13 00:00:00', 18, 1),
+(1280, '2025-09-13 00:00:00', '2025-09-13 00:00:00', 7, 1),
+(1281, '2025-09-13 00:00:00', '2025-09-13 00:00:00', 18, 1),
+(1282, '2025-09-13 00:00:00', '2025-09-13 00:00:00', 7, 1),
+(1283, '2025-09-13 00:00:00', '2025-09-13 00:00:00', 18, 1),
+(1284, '2025-09-14 00:00:00', '2025-09-14 00:00:00', 9, 1),
+(1285, '2025-09-14 00:00:00', '2025-09-14 00:00:00', 15, 1),
+(1286, '2025-09-14 00:00:00', '2025-09-14 00:00:00', 21, 1),
+(1287, '2025-09-14 00:00:00', '2025-09-14 00:00:00', 20, 1),
+(1288, '2025-09-14 00:00:00', '2025-09-14 00:00:00', 7, 1),
+(1289, '2025-09-14 00:00:00', '2025-09-14 00:00:00', 20, 1),
+(1290, '2025-09-14 00:00:00', '2025-09-14 00:00:00', 7, 1),
+(1291, '2025-09-14 00:00:00', '2025-09-14 00:00:00', 7, 1),
+(1292, '2025-09-15 00:00:00', '2025-09-15 00:00:00', 15, 1),
+(1293, '2025-09-15 00:00:00', '2025-09-15 00:00:00', 9, 1),
+(1294, '2025-09-15 00:00:00', '2025-09-15 00:00:00', 20, 1),
+(1295, '2025-09-15 00:00:00', '2025-09-15 00:00:00', 21, 1),
+(1296, '2025-09-15 00:00:00', '2025-09-15 00:00:00', 7, 1),
+(1297, '2025-09-15 00:00:00', '2025-09-15 00:00:00', 20, 1),
+(1298, '2025-09-15 00:00:00', '2025-09-15 00:00:00', 7, 1),
+(1299, '2025-09-15 00:00:00', '2025-09-15 00:00:00', 7, 1),
+(1300, '2025-09-16 16:30:03', '2025-09-16 16:30:03', 15, 1),
+(1301, '2025-09-16 16:31:13', '2025-09-16 16:31:13', 9, 1);
 
 -- --------------------------------------------------------
 
@@ -474,7 +834,7 @@ INSERT INTO `medicines` (`id`, `name`, `status`, `descript`, `quantity`, `interv
 (12, 'biotin', 1, 'N/A', 0, 6, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 1, 5, 1),
 (13, 'cicatricure', 1, NULL, 0, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, 6, 1),
 (14, 'ojer', 1, NULL, 0, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, 7, 1),
-(15, 'sawpalmeto', 1, 'diario', 53, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 1, 7, 1),
+(15, 'sawpalmeto', 1, 'diario', 7, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 1, 7, 1),
 (16, 'minoxidil topico', 1, 'diario', 0, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, 8, 1),
 (17, 'ejer: biceps', 1, 'ejercicio diario', 0, 4, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, 8, 2),
 (18, 'ejer: hombro', 1, 'ejercicio diario', 0, 4, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, 8, 2),
@@ -796,8 +1156,55 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (36, 'App\\Models\\User', 1, 'auth_token', '3ac9151ee756fe32d292d5afc67f223b2d6dd21800e7b40d183714f3f3c72143', '[\"*\"]', '2025-08-01 12:15:07', '2025-08-01 12:15:02', '2025-08-01 12:15:07'),
 (37, 'App\\Models\\User', 1, 'auth_token', '9a644a6cd9b0735cefead9c3620f455ac3e4be1afcf785cdb3c9983997659be1', '[\"*\"]', '2025-08-02 13:27:10', '2025-08-01 12:15:07', '2025-08-02 13:27:10'),
 (38, 'App\\Models\\User', 1, 'auth_token', '6b6784155e00efcfcf1b24e681991ba0d4f598a30259cd049770e4af25badefe', '[\"*\"]', '2025-08-01 21:54:14', '2025-08-01 18:32:34', '2025-08-01 21:54:14'),
-(39, 'App\\Models\\User', 1, 'auth_token', '204567b3af9aac388a95d452337280cdfd9cedd17f4e419cff31f2f28998af29', '[\"*\"]', '2025-08-01 22:02:33', '2025-08-01 21:54:14', '2025-08-01 22:02:33'),
-(40, 'App\\Models\\User', 1, 'auth_token', '2673fe2ba7ffd907b200308ed79324390b3ea89864437508726287f4b32ff248', '[\"*\"]', '2025-08-02 15:25:12', '2025-08-02 13:27:11', '2025-08-02 15:25:12');
+(39, 'App\\Models\\User', 1, 'auth_token', '204567b3af9aac388a95d452337280cdfd9cedd17f4e419cff31f2f28998af29', '[\"*\"]', '2025-08-02 15:57:54', '2025-08-01 21:54:14', '2025-08-02 15:57:54'),
+(40, 'App\\Models\\User', 1, 'auth_token', '2673fe2ba7ffd907b200308ed79324390b3ea89864437508726287f4b32ff248', '[\"*\"]', '2025-08-03 20:10:54', '2025-08-02 13:27:11', '2025-08-03 20:10:54'),
+(41, 'App\\Models\\User', 1, 'auth_token', 'f4a264349f2f91f991ca83df75feb37e44930beba68de7ebaf2a272befd7e0d6', '[\"*\"]', '2025-08-02 18:49:37', '2025-08-02 15:57:55', '2025-08-02 18:49:37'),
+(42, 'App\\Models\\User', 1, 'auth_token', '053486a6423ee2e6f975d36c7e3760df1c97b9171a5992fcd0a9d3726e036b31', '[\"*\"]', '2025-08-02 18:51:22', '2025-08-02 18:49:38', '2025-08-02 18:51:22'),
+(43, 'App\\Models\\User', 1, 'auth_token', '7285f171124ef134ce0d0c17a948f2666562f1352502015220df75e711cc3937', '[\"*\"]', '2025-08-02 23:21:46', '2025-08-02 18:51:22', '2025-08-02 23:21:46'),
+(44, 'App\\Models\\User', 1, 'auth_token', '71270b50d867eb2a27c05e97744230c7e858cef43d6ce8e26621d93f5f5669b0', '[\"*\"]', '2025-08-02 23:22:24', '2025-08-02 23:21:47', '2025-08-02 23:22:24'),
+(45, 'App\\Models\\User', 1, 'auth_token', '5bbc82470b11d18d1c4e9f61f74e7cbce748fa13ab48b948baff5cdf9b65ad75', '[\"*\"]', '2025-08-04 17:06:51', '2025-08-03 20:10:55', '2025-08-04 17:06:51'),
+(46, 'App\\Models\\User', 1, 'auth_token', '0ad311b97e7fd7a026ad742126c7b2eb6988f55aad643a54164c009e81e49969', '[\"*\"]', '2025-08-04 17:06:53', '2025-08-04 17:06:48', '2025-08-04 17:06:53'),
+(47, 'App\\Models\\User', 1, 'auth_token', 'c1060c7eaee1801dfe009648cb31d3a4db553938fa50e81da3b93927e149c679', '[\"*\"]', NULL, '2025-08-04 17:06:52', '2025-08-04 17:06:52'),
+(48, 'App\\Models\\User', 1, 'auth_token', '41fc75db109457299570a5140ba785ea7fd73cac0436ed40360a55df56436436', '[\"*\"]', '2025-08-05 17:23:29', '2025-08-04 17:06:52', '2025-08-05 17:23:29'),
+(49, 'App\\Models\\User', 1, 'auth_token', 'eded79728269134ea409fe959c0c94c4f526ac4d6914495be8828c0fa0cab3fe', '[\"*\"]', '2025-08-05 17:23:34', '2025-08-05 17:23:28', '2025-08-05 17:23:34'),
+(50, 'App\\Models\\User', 1, 'auth_token', '23c4364b8d6b77cb6e687c334a086ea078c2161134b8d47b615598693365eb13', '[\"*\"]', '2025-08-05 17:41:28', '2025-08-05 17:23:30', '2025-08-05 17:41:28'),
+(51, 'App\\Models\\User', 1, 'auth_token', 'ce0a80ccc076971d482634eb7bc9bf0307c616b299ddc26b401aae08166b0335', '[\"*\"]', '2025-08-06 14:28:29', '2025-08-05 17:41:29', '2025-08-06 14:28:29'),
+(52, 'App\\Models\\User', 1, 'auth_token', '0eed3c29457d26dc64bbfb283e6d076caa4fa3d42a6e9ef8ca64f834c5f4a9a0', '[\"*\"]', '2025-08-06 14:28:29', '2025-08-06 14:28:25', '2025-08-06 14:28:29'),
+(53, 'App\\Models\\User', 1, 'auth_token', '64ae7a39ab9df9d6d303961fc4a0e364ad7740ed7a1d014cb1c7f4669ca6ed79', '[\"*\"]', '2025-08-08 00:16:13', '2025-08-06 14:28:29', '2025-08-08 00:16:13'),
+(54, 'App\\Models\\User', 1, 'auth_token', '9dc0723da278346dddb71789120bad84c5838c7334a19d1223fda7cdd9a9b72e', '[\"*\"]', NULL, '2025-08-08 00:16:13', '2025-08-08 00:16:13'),
+(55, 'App\\Models\\User', 1, 'auth_token', 'c1213e47781c68dfe40328f4251683aef02dc52eecf31b04cda273efeb0757a6', '[\"*\"]', NULL, '2025-08-08 00:16:13', '2025-08-08 00:16:13'),
+(56, 'App\\Models\\User', 1, 'auth_token', 'da4822f74bafef939253936aec0b793a0d079e85155e3540a1b2b5c88b20fa43', '[\"*\"]', '2025-08-08 00:16:17', '2025-08-08 00:16:13', '2025-08-08 00:16:17'),
+(57, 'App\\Models\\User', 1, 'auth_token', 'b9ebc9173764e7fc8c48450ccccc960738985adb49d144f49f225c9f9b380c04', '[\"*\"]', '2025-08-08 12:51:28', '2025-08-08 00:16:14', '2025-08-08 12:51:28'),
+(58, 'App\\Models\\User', 1, 'auth_token', '6f91affbe82fa73d188ac6d464f54e724a03497ed1e199dcb1c66b3d468189f4', '[\"*\"]', '2025-08-11 20:59:58', '2025-08-08 12:51:29', '2025-08-11 20:59:58'),
+(59, 'App\\Models\\User', 1, 'auth_token', '2e2c576731ea20fa65632217e577e54e367d6dbd4eec065342550ca0ad174308', '[\"*\"]', '2025-08-12 14:00:05', '2025-08-11 20:59:59', '2025-08-12 14:00:05'),
+(60, 'App\\Models\\User', 1, 'auth_token', 'dd256fa531f2f864a68cb524ea8f48a0cc54eb016f9a673bf736859c0bddb900', '[\"*\"]', '2025-08-13 21:36:54', '2025-08-12 14:00:05', '2025-08-13 21:36:54'),
+(61, 'App\\Models\\User', 1, 'auth_token', '3d5753984b7b3ed53d88bad261f5a442f4b2e06a34a2135a9655551a5914eb17', '[\"*\"]', NULL, '2025-08-12 14:00:05', '2025-08-12 14:00:05'),
+(62, 'App\\Models\\User', 1, 'auth_token', '24b903061db6b1f23e681a8bdd90f9e4eab137507045928efcac0ba41b935448', '[\"*\"]', '2025-08-14 19:04:49', '2025-08-13 21:36:55', '2025-08-14 19:04:49'),
+(63, 'App\\Models\\User', 1, 'auth_token', '430a14660a19c92a1ad39b72f3807e7e810832fdcc6a53deed2d9ff7640265ab', '[\"*\"]', '2025-08-16 15:44:08', '2025-08-14 19:04:49', '2025-08-16 15:44:08'),
+(64, 'App\\Models\\User', 1, 'auth_token', 'bede807cf14d1a04f025f28402d77f7c9fddf26afe477414a5c03e2f9d78c1bd', '[\"*\"]', '2025-08-16 15:44:09', '2025-08-16 15:44:04', '2025-08-16 15:44:09'),
+(65, 'App\\Models\\User', 1, 'auth_token', '9416bd3dfb22ebd55b2bd4cd14b7bda77868883155f583366b576756e01749cf', '[\"*\"]', '2025-08-22 18:53:01', '2025-08-16 15:44:09', '2025-08-22 18:53:01'),
+(66, 'App\\Models\\User', 1, 'auth_token', '0b725ba3b4384db569d78001dfd62c7b1a39d5f674c256cc78f5bd4d22817dcb', '[\"*\"]', '2025-09-01 15:57:12', '2025-08-22 18:53:02', '2025-09-01 15:57:12'),
+(67, 'App\\Models\\User', 1, 'auth_token', '475ee02090e8ab39c62c6eeddb013bd665e96ff7a5cab4519a935251cb6828db', '[\"*\"]', NULL, '2025-08-22 18:53:02', '2025-08-22 18:53:02'),
+(68, 'App\\Models\\User', 1, 'auth_token', 'dd973a0395be2e7607bc14f36b4f752e36e90249ccae9e1c0b92b3372a2f7859', '[\"*\"]', '2025-09-02 03:13:55', '2025-09-01 15:57:13', '2025-09-02 03:13:55'),
+(69, 'App\\Models\\User', 1, 'auth_token', '6f8d4edf75e4118dff92baae9c740267a820686f9e34ab3cd0ad235b3fa24286', '[\"*\"]', '2025-09-02 03:13:57', '2025-09-02 03:13:52', '2025-09-02 03:13:57'),
+(70, 'App\\Models\\User', 1, 'auth_token', '0c637dae0950b5462bf08b7a437c1cdcb40d9077d1c7daa10f31fbc6cec8e62e', '[\"*\"]', '2025-09-02 14:27:59', '2025-09-02 03:13:56', '2025-09-02 14:27:59'),
+(71, 'App\\Models\\User', 1, 'auth_token', '50d15187ce9c0a5ef414f8d632c830a9e9bac169ef52ebeeddf31f890810b294', '[\"*\"]', '2025-09-02 23:44:00', '2025-09-02 14:28:00', '2025-09-02 23:44:00'),
+(72, 'App\\Models\\User', 1, 'auth_token', '2646297bd488e682e4ed660cbf59dc5e5366075f96e0540511c7751ea90cd42d', '[\"*\"]', '2025-09-02 23:44:03', '2025-09-02 23:43:58', '2025-09-02 23:44:03'),
+(73, 'App\\Models\\User', 1, 'auth_token', '10ba136fe59058768bf60176c415cc45271b2f7d100834a90ba514240f16f84f', '[\"*\"]', NULL, '2025-09-02 23:43:58', '2025-09-02 23:43:58'),
+(74, 'App\\Models\\User', 1, 'auth_token', 'add474b984ee00b3381c5ba9857a361fa04c1c679233e0073e803c0b047bc978', '[\"*\"]', '2025-09-03 18:08:19', '2025-09-02 23:44:01', '2025-09-03 18:08:19'),
+(75, 'App\\Models\\User', 1, 'auth_token', 'ae36a18e29a556cb17277fdc434ec89836ffcf88362d1652c310a3abc6f5c5fb', '[\"*\"]', '2025-09-04 18:43:38', '2025-09-03 18:08:20', '2025-09-04 18:43:38'),
+(76, 'App\\Models\\User', 1, 'auth_token', '231e2c18b1cc7ca3c2bc4af453985ec59b3526e371034ec9cc0c3ba7855c755b', '[\"*\"]', '2025-09-05 20:30:55', '2025-09-04 18:43:38', '2025-09-05 20:30:55'),
+(77, 'App\\Models\\User', 1, 'auth_token', '4411371c2d331c099a5c9326d036b3f4829a963da10de437d9d4a61170611d4c', '[\"*\"]', NULL, '2025-09-04 18:43:39', '2025-09-04 18:43:39'),
+(78, 'App\\Models\\User', 1, 'auth_token', 'f4e619abd7bfc2d56328a80c083bb06536e3429863c855672d220d7bc06bc29e', '[\"*\"]', '2025-09-10 01:44:34', '2025-09-05 20:30:56', '2025-09-10 01:44:34'),
+(79, 'App\\Models\\User', 1, 'auth_token', 'bdcf38cb41dfec0655b76fd7a9781337661a7cc13d02b2e6efc53c8c173d0f84', '[\"*\"]', '2025-09-10 01:44:39', '2025-09-10 01:44:34', '2025-09-10 01:44:39'),
+(80, 'App\\Models\\User', 1, 'auth_token', 'ed97732f161fbfc81282bf78bf847adb53398e5454f726b71a5640bb06e12eeb', '[\"*\"]', NULL, '2025-09-10 01:44:34', '2025-09-10 01:44:34'),
+(81, 'App\\Models\\User', 1, 'auth_token', 'da58e2ec9252bf31f0b10f27a93e50e12b464fc33c78c4eac2eb5482ccf41b5e', '[\"*\"]', '2025-09-11 20:41:24', '2025-09-10 01:44:35', '2025-09-11 20:41:24'),
+(82, 'App\\Models\\User', 1, 'auth_token', 'd2f15e08ffa1bc714e9647aed9fe955010eb97d2a2109bd026d35c13884c4997', '[\"*\"]', '2025-09-16 16:11:06', '2025-09-11 20:41:25', '2025-09-16 16:11:06'),
+(83, 'App\\Models\\User', 1, 'auth_token', 'a0e48dc639bff3c99ef95cf3365995b7d869db0885283c5faa68096a2124c24c', '[\"*\"]', NULL, '2025-09-11 20:41:25', '2025-09-11 20:41:25'),
+(84, 'App\\Models\\User', 1, 'auth_token', '21f0e2435400843208a95b98abdf40f56afd2c3e35bdd9164c3afa42e4178895', '[\"*\"]', '2025-09-16 17:11:35', '2025-09-16 16:11:07', '2025-09-16 17:11:35'),
+(85, 'App\\Models\\User', 1, 'auth_token', 'd693869375566a5e076df56f81c32693c156c025250860638e73c4b94f057460', '[\"*\"]', NULL, '2025-09-16 16:11:07', '2025-09-16 16:11:07'),
+(86, 'App\\Models\\User', 1, 'auth_token', '185ff46c877036ecec4b31df88cc3940d4ce3473df348cbae184d86267b22d75', '[\"*\"]', '2025-09-16 18:47:50', '2025-09-16 17:11:36', '2025-09-16 18:47:50'),
+(87, 'App\\Models\\User', 1, 'auth_token', '8386b87e70015cea3da2251fa68954497dd9b9703bcc5d235827eaa107c0c981', '[\"*\"]', '2025-09-16 21:31:16', '2025-09-16 18:47:51', '2025-09-16 21:31:16');
 
 -- --------------------------------------------------------
 
@@ -893,34 +1300,35 @@ CREATE TABLE `user_medicines` (
   `medicine_id` int DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
-  `several_per_day` int NOT NULL DEFAULT '0'
+  `several_per_day` int NOT NULL DEFAULT '0',
+  `medical_prescription` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Volcado de datos para la tabla `user_medicines`
 --
 
-INSERT INTO `user_medicines` (`id`, `user_id`, `medicine_id`, `created_at`, `updated_at`, `several_per_day`) VALUES
-(11, 1, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(12, 1, 2, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(13, 1, 3, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(14, 1, 4, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(15, 1, 5, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(17, 1, 7, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 3),
-(18, 1, 8, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(19, 1, 9, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(24, 1, 10, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(25, 1, 11, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(26, 1, 12, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(27, 1, 14, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(28, 1, 13, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(30, 1, 16, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(31, 1, 17, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(32, 1, 18, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(34, 1, 19, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(35, 1, 21, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0),
-(36, 1, 20, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 2),
-(37, 1, 15, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0);
+INSERT INTO `user_medicines` (`id`, `user_id`, `medicine_id`, `created_at`, `updated_at`, `several_per_day`, `medical_prescription`) VALUES
+(11, 1, 1, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(12, 1, 2, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(13, 1, 3, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(14, 1, 4, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(15, 1, 5, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(17, 1, 7, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 3, ''),
+(18, 1, 8, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(19, 1, 9, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(24, 1, 10, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(25, 1, 11, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(26, 1, 12, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(27, 1, 14, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(28, 1, 13, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(30, 1, 16, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(31, 1, 17, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 4, 'Rutina actua \r\n<br> 4 repeticiones \r\n<br> 50 bicept'),
+(32, 1, 18, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 4, 'Rutina actual\r\n<br>\r\n30\r\nHombro\r\n<br>\r\n40\r\nbicept'),
+(34, 1, 19, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(35, 1, 21, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, ''),
+(36, 1, 20, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 2, 'Semana 1\r\n <br>\r\n* 3 sesiones al día.<br>\r\n* 10 repeticiones de 3 segundos contracción + 5 segundos descanso.\r\n<br>\r\nSemana 2<br>\r\n * 3 sesiones al día.<br>\r\n * 15 repeticiones de 5 segundos contracción + 5 segundos descanso.\r\n <br>\r\nSemana 3\r\n <br>\r\n * 3 sesiones al día. <br>\r\n * 20 repeticiones (5 segundos contracción + 5 segundos descanso). <br>\r\n\r\nSeamana 4<br>\r\n * 3 sesiones al día.<br>\r\n * 25 repeticiones (incluso algunas contracciones fuertes de 10 segundos).<br>'),
+(37, 1, 15, '2023-02-04 16:09:50', '2023-02-04 16:09:50', 0, '');
 
 --
 -- Índices para tablas volcadas
@@ -1121,31 +1529,31 @@ ALTER TABLE `failed_jobs`
 -- AUTO_INCREMENT de la tabla `hours_per_dose`
 --
 ALTER TABLE `hours_per_dose`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de la tabla `investments`
 --
 ALTER TABLE `investments`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `investments_types`
 --
 ALTER TABLE `investments_types`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT de la tabla `investment_payments`
 --
 ALTER TABLE `investment_payments`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT de la tabla `log_medicines`
 --
 ALTER TABLE `log_medicines`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=892;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1302;
 
 --
 -- AUTO_INCREMENT de la tabla `medicines`
@@ -1187,7 +1595,7 @@ ALTER TABLE `permissions`
 -- AUTO_INCREMENT de la tabla `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -1211,7 +1619,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT de la tabla `user_medicines`
 --
 ALTER TABLE `user_medicines`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- Restricciones para tablas volcadas

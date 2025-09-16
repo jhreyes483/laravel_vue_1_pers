@@ -8,6 +8,10 @@
                 </div>
 
                 <div class="modal-body">
+                    <div v-if="items[0] ">
+                        <b v-if="items[0].medical_prescription != ''">Receta:</b>
+                        <p v-html="items[0].medical_prescription"></p>
+                    </div>
                     <div class="table-responsive">
                         <table v-if="items.length" class="table table-sm table-striped">
                             <thead>
@@ -31,6 +35,7 @@
                         </table>
                         <div v-else class="text-muted">No hay registros disponibles.</div>
                     </div>
+             
                 </div>
 
                 <div class="modal-footer">
